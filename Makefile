@@ -2,7 +2,8 @@ new_migration:
 	migrate create -ext sql -dir ./migrations -seq $(name)
 
 sqlc:
-	sqlc generate
+	sqlc generate -f ./db/sqlc.yaml
 
-compose_up:
-	docker compose -p avito-pvz -f ./deployments/docker-compose.yaml up --build
+all: sqlc
+	docker compose up -d
+	go run ./cmd/main.go
