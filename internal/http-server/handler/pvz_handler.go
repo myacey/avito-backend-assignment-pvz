@@ -7,12 +7,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
-	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
 )
 
 type PvzService interface {
-	CreatePvz(context.Context, *request.CreatePvz) (*response.CreatePvz, error)
+	CreatePvz(context.Context, *request.CreatePvz) (*entity.Pvz, error)
 }
 
 func CreatePvz(ctx *gin.Context, service PvzService) error {

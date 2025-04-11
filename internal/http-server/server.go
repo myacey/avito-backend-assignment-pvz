@@ -10,21 +10,27 @@ import (
 	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
-	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/auth"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/service"
 )
 
+type RoleCheckerMiddleware interface {
+	AuthMiddleware(neededRole entity.Role) gin.HandlerFunc
+}
+
 type App struct {
 	server  web.Server
 	router  *gin.Engine
 	service *service.Service
+
+	authService RoleCheckerMiddleware
 }
 
-func New(service *service.Service, cfg config.AppConfig) *App {
+func New(service *service.Service, cfg config.AppConfig, authService RoleCheckerMiddleware) *App {
 	app := &App{
-		service: service,
+		service:     service,
+		authService: authService,
 	}
 	app.initRoutes()
 	app.server = web.NewServer(cfg.ServerCfg, app.router)
@@ -43,23 +49,23 @@ func (app *App) Stop(ctx context.Context) error {
 func (app *App) initRoutes() {
 	app.router = gin.Default()
 
-	app.router.POST("/dummyLogin", mappedHandler[handler.UserService](app.service, handler.DummyLogin))
-	app.router.POST("/login", mappedHandler[handler.UserService](app.service, handler.Login))
-	app.router.POST("/register", mappedHandler[handler.UserService](app.service, handler.Login))
+	app.router.POST("/dummyLogin", mappedHandler[handler.UserService](&app.service.UserService, handler.DummyLogin))
+	app.router.POST("/login", mappedHandler[handler.UserService](&app.service.UserService, handler.Login))
+	app.router.POST("/register", mappedHandler[handler.UserService](&app.service.UserService, handler.Login))
 
 	employeeOnly := app.router.Group("/")
-	employeeOnly.Use(auth.AuthMiddleware(entity.ROLE_EMPLOYEE))
+	employeeOnly.Use(app.authService.AuthMiddleware(entity.ROLE_EMPLOYEE))
 	{
-		employeeOnly.POST("/pvz/:pvzid/close_last_reception", mappedHandler[handler.ReceptionService](app.service, handler.CompleteReception))
-		employeeOnly.POST("/pvz/:pvzid/delete_last_product", mappedHandler[handler.ReceptionService](app.service, handler.DeleteLastProduct))
-		employeeOnly.POST("/receptions", mappedHandler[handler.ReceptionService](app.service, handler.CreateReception))
-		employeeOnly.POST("/products", mappedHandler[handler.ReceptionService](app.service, handler.AddProductToReception))
+		employeeOnly.POST("/pvz/:pvzid/close_last_reception", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, handler.CompleteReception))
+		employeeOnly.POST("/pvz/:pvzid/delete_last_product", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, handler.DeleteLastProduct))
+		employeeOnly.POST("/receptions", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, handler.CreateReception))
+		employeeOnly.POST("/products", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, handler.AddProductToReception))
 	}
 
 	moderatorOnly := app.router.Group("/")
-	moderatorOnly.Use(auth.AuthMiddleware(entity.ROLE_MODERATOR))
+	moderatorOnly.Use(app.authService.AuthMiddleware(entity.ROLE_MODERATOR))
 	{
-		moderatorOnly.POST("/pvz", mappedHandler[handler.PvzService](app.service, handler.CreatePvz))
+		moderatorOnly.POST("/pvz", mappedHandler[handler.PvzService](&app.service.PvzService, handler.CreatePvz))
 	}
 }
 

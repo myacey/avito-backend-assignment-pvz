@@ -9,8 +9,12 @@ import (
 
 	"github.com/myacey/avito-backend-assignment-pvz/internal/config"
 	http_server "github.com/myacey/avito-backend-assignment-pvz/internal/http-server"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/auth"
+	jwt_token "github.com/myacey/avito-backend-assignment-pvz/internal/pkg/jwt-token"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/service"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -23,25 +27,26 @@ func main() {
 	}
 
 	queries, conn, err := repository.ConfigurePostgres(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	receptionRepo := repository.NewReceptionRepository(queries)
 	pvzRepo := repository.NewPvzRepository(queries)
 	userRepo := repository.NewUserRepository(queries)
 
+	tokenSrv := jwt_token.New(cfg.TokenService)
+	authSrv := auth.New(tokenSrv)
+
 	app := http_server.New(&service.Service{
-		UserServiceImpl:      *service.NewUserService(*userRepo, conn),
-		PvzServiceImpl:       *service.NewPvzService(*pvzRepo, conn),
-		ReceptionServiceImpl: *service.NewReceptionService(*receptionRepo, conn),
-	}, cfg)
+		UserService:      *service.NewUserService(*userRepo, conn, tokenSrv),
+		PvzService:       *service.NewPvzService(*pvzRepo, conn),
+		ReceptionService: *service.NewReceptionService(*receptionRepo, conn),
+	}, cfg, authSrv)
 
 	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				app.Stop(ctx)
-				return
-			}
-		}
+		<-ctx.Done()
+		app.Stop(ctx)
 	}()
 
 	if err := app.Start(ctx); err != nil {

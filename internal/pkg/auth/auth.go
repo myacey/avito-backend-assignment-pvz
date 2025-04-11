@@ -8,21 +8,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
-	jwt_token "github.com/myacey/avito-backend-assignment-pvz/internal/pkg/jwt-token"
 )
 
-// type TokenService interface {
-// 	CreateToken(role string, expireTime time.Time) (string, error)
-// 	VerifyToken(token string) (map[string]interface{}, error)
-// }
+type TokenChecker interface {
+	VerifyToken(token string) (map[string]interface{}, error)
+}
 
-// type AuthService struct {
-// 	tokenSrv TokenService
-// }
+type AuthService struct {
+	tokenSrv TokenChecker
+}
 
-// func NewAuthService(tokenSrv TokenService) *AuthService {
-// 	return
-// }
+func New(tokenSrv TokenChecker) *AuthService {
+	return &AuthService{
+		tokenSrv: tokenSrv,
+	}
+}
 
 func getToken(ctx *gin.Context) (string, error) {
 	bearerToken := ctx.GetHeader("Authorization")
@@ -36,11 +36,11 @@ func getToken(ctx *gin.Context) (string, error) {
 	return tokenStr, nil
 }
 
-func AuthMiddleware(neededRole entity.Role) gin.HandlerFunc {
+func (s *AuthService) AuthMiddleware(neededRole entity.Role) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token, err := getToken(ctx)
 		if err != nil {
-			ctx.JSON(http.StatusUnauthorized, response.Error{
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
 				Code:      http.StatusUnauthorized,
 				Message:   err.Error(),
 				RequestId: ctx.GetHeader("X-Request-Id"),
@@ -48,9 +48,9 @@ func AuthMiddleware(neededRole entity.Role) gin.HandlerFunc {
 			return
 		}
 
-		claims, err := jwt_token.VerifyToken(token)
+		claims, err := s.tokenSrv.VerifyToken(token)
 		if err != nil {
-			ctx.JSON(http.StatusUnauthorized, response.Error{
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
 				Code:      http.StatusUnauthorized,
 				Message:   err.Error(),
 				RequestId: ctx.GetHeader("X-Request-Id"),

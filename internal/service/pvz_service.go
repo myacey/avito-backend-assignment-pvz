@@ -5,7 +5,8 @@ import (
 	"database/sql"
 
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
-	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 )
 
@@ -22,6 +23,11 @@ func NewPvzService(repo repository.PvzRepository, conn *sql.DB) *PvzServiceImpl 
 	}
 }
 
-func (s *PvzServiceImpl) CreatePvz(ctx context.Context, req *request.CreatePvz) (*response.CreatePvz, error) {
-	return nil, nil
+func (s *PvzServiceImpl) CreatePvz(ctx context.Context, req *request.CreatePvz) (*entity.Pvz, error) {
+	resp, err := s.repo.CreatePvz(ctx, req)
+	if err != nil {
+		return nil, apperror.NewBadReq("invalid req")
+	}
+
+	return resp, err
 }

@@ -1,7 +1,7 @@
 package service
 
 type Service struct {
-	UserServiceImpl
-	PvzServiceImpl
-	ReceptionServiceImpl
+	UserService      UserServiceImpl
+	PvzService       PvzServiceImpl
+	ReceptionService ReceptionServiceImpl
 }
