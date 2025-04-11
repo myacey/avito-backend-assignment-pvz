@@ -15,6 +15,8 @@ import (
 	"github.com/myacey/avito-backend-assignment-pvz/internal/service"
 )
 
+// RoleCheckerMiddleware is middleware interface
+// for checking account's roles.
 type RoleCheckerMiddleware interface {
 	AuthMiddleware(neededRole entity.Role) gin.HandlerFunc
 }
@@ -51,7 +53,7 @@ func (app *App) initRoutes() {
 
 	app.router.POST("/dummyLogin", mappedHandler[handler.UserService](&app.service.UserService, handler.DummyLogin))
 	app.router.POST("/login", mappedHandler[handler.UserService](&app.service.UserService, handler.Login))
-	app.router.POST("/register", mappedHandler[handler.UserService](&app.service.UserService, handler.Login))
+	app.router.POST("/register", mappedHandler[handler.UserService](&app.service.UserService, handler.Register))
 
 	employeeOnly := app.router.Group("/")
 	employeeOnly.Use(app.authService.AuthMiddleware(entity.ROLE_EMPLOYEE))
@@ -67,12 +69,15 @@ func (app *App) initRoutes() {
 	{
 		moderatorOnly.POST("/pvz", mappedHandler[handler.PvzService](&app.service.PvzService, handler.CreatePvz))
 	}
+
+	// apiHandler := api_impl.NewAPIHandlerWithFuncs(app.service)
+	// openapi.RegisterHandlers(app.router, apiHandler)
 }
 
 func mappedHandler[S any](service S, handler func(*gin.Context, S) error) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if err := handler(ctx, service); err != nil {
-			if httpError, ok := err.(*apperror.HTTPError); ok {
+			if httpError, ok := err.(apperror.HTTPError); ok {
 				ctx.JSON(httpError.Code, response.Error{
 					Code:      httpError.Code,
 					Message:   httpError.Error(),
@@ -80,7 +85,7 @@ func mappedHandler[S any](service S, handler func(*gin.Context, S) error) gin.Ha
 				})
 
 				if httpError.Code == http.StatusInternalServerError {
-					log.Printf("internal error: %v", httpError.Message)
+					log.Printf("internal error: %v | %v", httpError.Message, httpError.DebugError)
 				}
 			} else {
 				ctx.JSON(http.StatusInternalServerError, response.Error{

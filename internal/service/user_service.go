@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
@@ -44,8 +45,25 @@ func (s *UserServiceImpl) DummyLogin(ctx context.Context, req *request.DummyLogi
 	}, nil
 }
 
-func (s *UserServiceImpl) Register(context.Context, *request.Register) (*response.Login, error) {
-	return nil, nil
+func (s *UserServiceImpl) Register(ctx context.Context, req *request.Register) (*response.Login, error) {
+	res, err := s.repo.CreateUser(ctx, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrUserAlreadyExists):
+			return nil, apperror.NewBadReq(err.Error())
+		default:
+			return nil, apperror.NewInternal("cant add new user", err)
+		}
+	}
+
+	tokenStr, err := s.tokenSrv.CraeteUserToken(res.ID, req.Role)
+	if err != nil {
+		return nil, apperror.NewInternal("cant create new token", err)
+	}
+
+	return &response.Login{
+		Token: tokenStr,
+	}, nil
 }
 
 func (s *UserServiceImpl) Login(context.Context, *request.Login) (*response.Login, error) {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/lib/pq"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/config"
 	db "github.com/myacey/avito-backend-assignment-pvz/internal/repository/sqlc"
 )
@@ -31,4 +32,13 @@ func ConfigurePostgres(cfg config.AppConfig) (*db.Queries, *sql.DB, error) {
 	queries := db.New(conn)
 
 	return queries, conn, nil
+}
+
+// isUniqueViolation checks if err is about
+// not unique val.
+func isUniqueViolation(err error) bool {
+	if pqErr, ok := err.(*pq.Error); ok {
+		return pqErr.Code == "23505"
+	}
+	return false
 }

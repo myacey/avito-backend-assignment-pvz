@@ -1,6 +1,10 @@
 package entity
 
-import "database/sql/driver"
+import (
+	"database/sql/driver"
+
+	"github.com/google/uuid"
+)
 
 type Role string
 
@@ -22,4 +26,10 @@ func (r Role) Value() (driver.Value, error) {
 func (r *Role) Scan(value interface{}) error {
 	*r = Role(string(value.([]byte)))
 	return nil
+}
+
+type User struct {
+	ID    uuid.UUID `json:"uuid"`
+	Email string    `json:"email"`
+	Role  Role      `json:"role"`
 }
