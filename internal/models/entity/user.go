@@ -29,7 +29,8 @@ func (r *Role) Scan(value interface{}) error {
 }
 
 type User struct {
-	ID    uuid.UUID `json:"uuid"`
-	Email string    `json:"email"`
-	Role  Role      `json:"role"`
+	ID       uuid.UUID `json:"uuid"`
+	Email    string    `json:"email"`
+	Password string    `json:"-"`
+	Role     Role      `json:"role"`
 }

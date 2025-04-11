@@ -66,6 +66,22 @@ func (s *UserServiceImpl) Register(ctx context.Context, req *request.Register) (
 	}, nil
 }
 
-func (s *UserServiceImpl) Login(context.Context, *request.Login) (*response.Login, error) {
-	return nil, nil
+func (s *UserServiceImpl) Login(ctx context.Context, req *request.Login) (*response.Login, error) {
+	res, err := s.repo.GetUser(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Password != res.Password {
+		return nil, apperror.NewUnauthorized("user not found")
+	}
+
+	tokenStr, err := s.tokenSrv.CraeteUserToken(res.ID, string(res.Role))
+	if err != nil {
+		return nil, apperror.NewInternal("unable to craete", err)
+	}
+
+	return &response.Login{
+		Token: tokenStr,
+	}, nil
 }

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/google/uuid"
@@ -10,7 +11,10 @@ import (
 	db "github.com/myacey/avito-backend-assignment-pvz/internal/repository/sqlc"
 )
 
-var ErrUserAlreadyExists = errors.New("user already exists")
+var (
+	ErrUserAlreadyExists = errors.New("user already exists")
+	ErrUserNotFound      = errors.New("user not found")
+)
 
 type UserRepository struct {
 	queries *db.Queries
@@ -42,5 +46,24 @@ func (r *UserRepository) CreateUser(ctx context.Context, req *request.Register) 
 		ID:    res.ID,
 		Email: res.Email,
 		Role:  res.Role,
+	}, nil
+}
+
+func (r *UserRepository) GetUser(ctx context.Context, req *request.Login) (*entity.User, error) {
+	res, err := r.queries.GetUserByEmail(ctx, req.Email)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrUserNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &entity.User{
+		ID:       res.ID,
+		Email:    res.Email,
+		Role:     res.Role,
+		Password: res.Password,
 	}, nil
 }
