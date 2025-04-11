@@ -20,7 +20,7 @@ CREATE TYPE status_enum AS ENUM ('in_progress', 'close');
 CREATE TABLE IF NOT EXISTS receptions (
     "id" UUID PRIMARY KEY,
     "date_time" TIMESTAMPTZ NOT NULL,
-    "pvz_id" UUID REFERENCES pvz ("id"),
+    "pvz_id" UUID REFERENCES pvz ("id") NOT NULL,
     "status" status_enum NOT NULL DEFAULT('in_progress')
 );
 CREATE INDEX ON receptions ("pvz_id", "status");

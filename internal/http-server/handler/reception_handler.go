@@ -111,7 +111,7 @@ func CreateReception(ctx *gin.Context, service ReceptionService) error {
 
 	var req request.CreateReception
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		return apperror.NewBadReq("invalid req")
+		return apperror.NewBadReq("invalid req: " + err.Error())
 	}
 
 	resp, err := service.CreateReception(ctx, &req)

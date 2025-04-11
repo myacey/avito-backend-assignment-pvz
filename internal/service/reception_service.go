@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 )
 
@@ -35,7 +37,30 @@ func (s *ReceptionServiceImpl) DeleteLastProduct(ctx context.Context, pvzID stri
 }
 
 func (s *ReceptionServiceImpl) CreateReception(ctx context.Context, req *request.CreateReception) (*response.Reception, error) {
-	return nil, nil
+	openRecepton, err := s.receptionRepo.GetLastOpenReception(ctx, req.PvzID)
+	if err != nil && !errors.Is(err, repository.ErrNoOpenReceptionFound) {
+		return nil, apperror.NewInternal("failed to create reception", err)
+	}
+	if err == nil {
+		return nil, apperror.NewBadReq("can't start new reception, already in-progress: " + openRecepton.ID.String())
+	}
+
+	reception, err := s.receptionRepo.CreateReception(ctx, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrReceptionInProgress):
+			return nil, apperror.NewBadReq("can't start new reception, already in-progress: " + reception.ID.String())
+		default:
+			return nil, apperror.NewInternal("failed to create reception", err)
+		}
+	}
+
+	return &response.Reception{
+		ID:       reception.ID,
+		DateTime: reception.DateTime,
+		PvzId:    reception.PvzID,
+		Status:   string(reception.Status),
+	}, nil
 }
 
 func (s *ReceptionServiceImpl) AddProductToReception(ctx context.Context, req *request.AddProduct) error {

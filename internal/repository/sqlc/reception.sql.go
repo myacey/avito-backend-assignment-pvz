@@ -49,9 +49,9 @@ RETURNING id, date_time, pvz_id, status
 `
 
 type CreateReceptionParams struct {
-	ID       uuid.UUID     `json:"id"`
-	DateTime time.Time     `json:"date_time"`
-	PvzID    uuid.NullUUID `json:"pvz_id"`
+	ID       uuid.UUID `json:"id"`
+	DateTime time.Time `json:"date_time"`
+	PvzID    uuid.UUID `json:"pvz_id"`
 }
 
 func (q *Queries) CreateReception(ctx context.Context, arg CreateReceptionParams) (Reception, error) {
@@ -87,17 +87,22 @@ func (q *Queries) FinishReception(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-const getOpenReceptionByPvz = `-- name: GetOpenReceptionByPvz :one
-SELECT id FROM receptions
+const getOpenReceptionByPvzID = `-- name: GetOpenReceptionByPvzID :one
+SELECT id, date_time, pvz_id, status FROM receptions
 WHERE pvz_id = $1 AND status = 'in_progress'
 LIMIT 1
 `
 
-func (q *Queries) GetOpenReceptionByPvz(ctx context.Context, pvzID uuid.NullUUID) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, getOpenReceptionByPvz, pvzID)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+func (q *Queries) GetOpenReceptionByPvzID(ctx context.Context, pvzID uuid.UUID) (Reception, error) {
+	row := q.db.QueryRowContext(ctx, getOpenReceptionByPvzID, pvzID)
+	var i Reception
+	err := row.Scan(
+		&i.ID,
+		&i.DateTime,
+		&i.PvzID,
+		&i.Status,
+	)
+	return i, err
 }
 
 const getProductsFromReception = `-- name: GetProductsFromReception :many
@@ -139,9 +144,9 @@ WHERE pvz_id IN ($1) AND date_time BETWEEN $2 AND $3
 `
 
 type GetReceptionsByPvzAndTimeParams struct {
-	PvzID      uuid.NullUUID `json:"pvz_id"`
-	DateTime   time.Time     `json:"date_time"`
-	DateTime_2 time.Time     `json:"date_time_2"`
+	PvzID      uuid.UUID `json:"pvz_id"`
+	DateTime   time.Time `json:"date_time"`
+	DateTime_2 time.Time `json:"date_time_2"`
 }
 
 func (q *Queries) GetReceptionsByPvzAndTime(ctx context.Context, arg GetReceptionsByPvzAndTimeParams) ([]Reception, error) {
@@ -173,8 +178,7 @@ func (q *Queries) GetReceptionsByPvzAndTime(ctx context.Context, arg GetReceptio
 }
 
 const getReceptionsByTime = `-- name: GetReceptionsByTime :many
-SELECT id, date_time, pvz_id, status
-FROM receptions
+SELECT id, date_time, pvz_id, status FROM receptions
 WHERE date_time BETWEEN $1 AND $2
 `
 

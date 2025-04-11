@@ -3,14 +3,13 @@ INSERT INTO receptions (id, date_time, pvz_id) VALUES
 ($1, $2, $3)
 RETURNING *;
 
--- name: GetOpenReceptionByPvz :one
-SELECT id FROM receptions
+-- name: GetOpenReceptionByPvzID :one
+SELECT * FROM receptions
 WHERE pvz_id = $1 AND status = 'in_progress'
 LIMIT 1;
 
 -- name: GetReceptionsByTime :many
-SELECT id, date_time, pvz_id, status
-FROM receptions
+SELECT * FROM receptions
 WHERE date_time BETWEEN $1 AND $2;
 
 -- name: GetReceptionsByPvzAndTime :many

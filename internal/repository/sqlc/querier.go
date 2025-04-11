@@ -17,7 +17,7 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteProductFromReception(ctx context.Context, id uuid.UUID) error
 	FinishReception(ctx context.Context, id uuid.UUID) error
-	GetOpenReceptionByPvz(ctx context.Context, pvzID uuid.NullUUID) (uuid.UUID, error)
+	GetOpenReceptionByPvzID(ctx context.Context, pvzID uuid.UUID) (Reception, error)
 	GetProductsFromReception(ctx context.Context, receptionID uuid.NullUUID) ([]Product, error)
 	GetReceptionsByPvzAndTime(ctx context.Context, arg GetReceptionsByPvzAndTimeParams) ([]Reception, error)
 	GetReceptionsByTime(ctx context.Context, arg GetReceptionsByTimeParams) ([]Reception, error)

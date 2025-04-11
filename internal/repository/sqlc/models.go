@@ -199,7 +199,7 @@ type Pvz struct {
 type Reception struct {
 	ID       uuid.UUID     `json:"id"`
 	DateTime time.Time     `json:"date_time"`
-	PvzID    uuid.NullUUID `json:"pvz_id"`
+	PvzID    uuid.UUID     `json:"pvz_id"`
 	Status   entity.Status `json:"status"`
 }
 

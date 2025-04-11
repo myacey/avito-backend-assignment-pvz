@@ -28,14 +28,14 @@ type CreatePvz struct {
 }
 
 type SearchPvz struct {
-	StartDate time.Time `json:"start_date"`
-	EndDate   time.Time `json:"end_time"`
-	Page      int       `json:"page"`
-	Limit     int       `json:"limit"`
+	StartDate time.Time
+	EndDate   time.Time
+	Page      int
+	Limit     int
 }
 
 type CreateReception struct {
-	PvzID uuid.UUID `json:"uuid" binding:"required,uuid"`
+	PvzID uuid.UUID `json:"pvz_id" binding:"required,uuid"`
 }
 
 type AddProduct struct {
