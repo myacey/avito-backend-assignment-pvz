@@ -44,6 +44,35 @@ func (s *ReceptionServiceImpl) FinishReception(ctx context.Context, pvzID uuid.U
 }
 
 func (s *ReceptionServiceImpl) DeleteLastProduct(ctx context.Context, pvzID uuid.UUID) error {
+	openReception, err := s.receptionRepo.GetLastOpenReception(ctx, pvzID)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrNoOpenReceptionFound):
+			return apperror.NewBadReq("no in-progress reception found")
+		default:
+			return apperror.NewInternal("failed to find open reception", err)
+		}
+	}
+
+	lastProduct, err := s.receptionRepo.GetLastProductInReception(ctx, openReception.ID)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrNoProduct):
+			return apperror.NewBadReq(err.Error())
+		default:
+			return apperror.NewInternal("failed to find product in reception", err)
+		}
+	}
+
+	err = s.receptionRepo.DeleteProductInReception(ctx, lastProduct.ID)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrNoProduct):
+			return apperror.NewBadReq(err.Error())
+		default:
+			return apperror.NewInternal("failed to delete product in reception", err)
+		}
+	}
 	return nil
 }
 

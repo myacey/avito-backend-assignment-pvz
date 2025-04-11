@@ -36,7 +36,7 @@ const (
 	PRODUCT_TYPE_SHOES       ProductType = "обувь"
 )
 
-var Productes map[ProductType]bool = map[ProductType]bool{
+var ProductTypes map[ProductType]bool = map[ProductType]bool{
 	PRODUCT_TYPE_ELECTRONICS: true,
 	PRODUCT_TYPE_CLOTHES:     true,
 	PRODUCT_TYPE_SHOES:       true,

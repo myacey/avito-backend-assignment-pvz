@@ -132,6 +132,10 @@ func AddProductToReception(ctx *gin.Context, service ReceptionService) error {
 		return apperror.NewBadReq("invalid req: " + err.Error())
 	}
 
+	if _, ok := entity.ProductTypes[entity.ProductType(req.Type)]; !ok {
+		return apperror.NewBadReq("invalid product type: " + req.Type)
+	}
+
 	product, err := service.AddProductToReception(ctx, &req)
 	if err != nil {
 		return err

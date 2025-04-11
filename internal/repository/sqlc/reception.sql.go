@@ -60,13 +60,13 @@ func (q *Queries) CreateReception(ctx context.Context, arg CreateReceptionParams
 	return i, err
 }
 
-const deleteProductFromReception = `-- name: DeleteProductFromReception :exec
+const deleteProduct = `-- name: DeleteProduct :exec
 DELETE FROM products
 WHERE id = $1
 `
 
-func (q *Queries) DeleteProductFromReception(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteProductFromReception, id)
+func (q *Queries) DeleteProduct(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteProduct, id)
 	return err
 }
 
@@ -85,6 +85,25 @@ func (q *Queries) FinishReception(ctx context.Context, pvzID uuid.UUID) (Recepti
 		&i.DateTime,
 		&i.PvzID,
 		&i.Status,
+	)
+	return i, err
+}
+
+const getLastProductInReception = `-- name: GetLastProductInReception :one
+SELECT id, date_time, type, reception_id FROM products
+WHERE reception_id = $1
+ORDER BY date_time DESC
+LIMIT 1
+`
+
+func (q *Queries) GetLastProductInReception(ctx context.Context, receptionID uuid.UUID) (Product, error) {
+	row := q.db.QueryRowContext(ctx, getLastProductInReception, receptionID)
+	var i Product
+	err := row.Scan(
+		&i.ID,
+		&i.DateTime,
+		&i.Type,
+		&i.ReceptionID,
 	)
 	return i, err
 }

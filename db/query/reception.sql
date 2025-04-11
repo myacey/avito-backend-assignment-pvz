@@ -25,7 +25,13 @@ RETURNING *;
 SELECT * FROM products
 WHERE reception_id IN ($1);
 
--- name: DeleteProductFromReception :exec
+-- name: GetLastProductInReception :one
+SELECT * FROM products
+WHERE reception_id = $1
+ORDER BY date_time DESC
+LIMIT 1;
+
+-- name: DeleteProduct :exec
 DELETE FROM products
 WHERE id = $1;
 

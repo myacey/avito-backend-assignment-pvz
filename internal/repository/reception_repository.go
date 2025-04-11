@@ -16,6 +16,7 @@ import (
 var (
 	ErrReceptionInProgress  = errors.New("other reception in progress")
 	ErrNoOpenReceptionFound = errors.New("no in-progress reception found")
+	ErrNoProduct            = errors.New("no product in reception")
 )
 
 const (
@@ -98,7 +99,7 @@ func (r *ReceptionRepository) AddProductToReception(ctx context.Context, req *re
 		ID:          res.ID,
 		DateTime:    res.DateTime,
 		Type:        entity.ProductType(res.Type),
-		ReceptionID: res.ID,
+		ReceptionID: res.ReceptionID,
 	}, nil
 }
 
@@ -119,4 +120,27 @@ func (r *ReceptionRepository) FinishReception(ctx context.Context, pvzID uuid.UU
 		PvzID:    res.PvzID,
 		Status:   res.Status,
 	}, nil
+}
+
+func (r *ReceptionRepository) GetLastProductInReception(ctx context.Context, receptionID uuid.UUID) (*entity.Product, error) {
+	res, err := r.queries.GetLastProductInReception(ctx, receptionID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNoProduct
+	}
+
+	return &entity.Product{
+		ID:          res.ID,
+		DateTime:    res.DateTime,
+		Type:        entity.ProductType(res.Type),
+		ReceptionID: res.ReceptionID,
+	}, nil
+}
+
+func (r *ReceptionRepository) DeleteProductInReception(ctx context.Context, productID uuid.UUID) error {
+	err := r.queries.DeleteProduct(ctx, productID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrNoProduct
+	}
+
+	return nil
 }

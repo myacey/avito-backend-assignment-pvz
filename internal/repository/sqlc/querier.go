@@ -15,8 +15,9 @@ type Querier interface {
 	CreatePVZ(ctx context.Context, arg CreatePVZParams) (Pvz, error)
 	CreateReception(ctx context.Context, arg CreateReceptionParams) (Reception, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	DeleteProductFromReception(ctx context.Context, id uuid.UUID) error
+	DeleteProduct(ctx context.Context, id uuid.UUID) error
 	FinishReception(ctx context.Context, pvzID uuid.UUID) (Reception, error)
+	GetLastProductInReception(ctx context.Context, receptionID uuid.UUID) (Product, error)
 	GetOpenReceptionByPvzID(ctx context.Context, pvzID uuid.UUID) (Reception, error)
 	GetProductsFromReception(ctx context.Context, receptionID uuid.UUID) ([]Product, error)
 	GetReceptionsByPvzAndTime(ctx context.Context, arg GetReceptionsByPvzAndTimeParams) ([]Reception, error)
