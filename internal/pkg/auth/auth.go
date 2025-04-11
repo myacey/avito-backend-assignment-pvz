@@ -58,15 +58,20 @@ func (s *AuthService) AuthMiddleware(neededRole entity.Role) gin.HandlerFunc {
 			return
 		}
 
-		if claims["role"].(string) == string(neededRole) {
+		r, ok := claims["role"]
+		if ok && r.(string) == string(neededRole) {
 			ctx.Set("User-Type", claims["role"])
 			ctx.Next()
 			return
 		}
 
-		ctx.JSON(http.StatusUnauthorized, response.Error{
+		msg := "invalid role"
+		if ok {
+			msg += ": " + r.(string)
+		}
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
 			Code:      http.StatusUnauthorized,
-			Message:   "invalid role",
+			Message:   msg,
 			RequestId: ctx.GetHeader("X-Request-Id"),
 		})
 	}

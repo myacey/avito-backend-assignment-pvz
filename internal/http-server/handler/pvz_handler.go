@@ -19,7 +19,7 @@ func CreatePvz(ctx *gin.Context, service PvzService) error {
 	log.SetPrefix("http-server.handler.CreatePvz")
 	var req request.CreatePvz
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		return apperror.NewBadReq("invalid req")
+		return apperror.NewBadReq("invalid req: " + err.Error())
 	}
 
 	resp, err := service.CreatePvz(ctx, &req)

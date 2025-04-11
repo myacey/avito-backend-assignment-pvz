@@ -64,5 +64,8 @@ func (s *JWTTokenService) VerifyToken(tokenStr string) (map[string]interface{}, 
 		return nil, errors.New("invalid token")
 	}
 
-	return token.Header, nil
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		return claims, nil
+	}
+	return nil, errors.New("invalid token")
 }
