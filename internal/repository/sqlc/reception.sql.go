@@ -13,25 +13,19 @@ import (
 )
 
 const addProductToReception = `-- name: AddProductToReception :one
-INSERT INTO products (id, date_time, type, reception_id) VALUES
-($1, $2, $3, $4)
+INSERT INTO products (id, type, reception_id) VALUES
+($1, $2, $3)
 RETURNING id, date_time, type, reception_id
 `
 
 type AddProductToReceptionParams struct {
-	ID          uuid.UUID     `json:"id"`
-	DateTime    time.Time     `json:"date_time"`
-	Type        ProductType   `json:"type"`
-	ReceptionID uuid.NullUUID `json:"reception_id"`
+	ID          uuid.UUID   `json:"id"`
+	Type        ProductType `json:"type"`
+	ReceptionID uuid.UUID   `json:"reception_id"`
 }
 
 func (q *Queries) AddProductToReception(ctx context.Context, arg AddProductToReceptionParams) (Product, error) {
-	row := q.db.QueryRowContext(ctx, addProductToReception,
-		arg.ID,
-		arg.DateTime,
-		arg.Type,
-		arg.ReceptionID,
-	)
+	row := q.db.QueryRowContext(ctx, addProductToReception, arg.ID, arg.Type, arg.ReceptionID)
 	var i Product
 	err := row.Scan(
 		&i.ID,
@@ -76,15 +70,23 @@ func (q *Queries) DeleteProductFromReception(ctx context.Context, id uuid.UUID) 
 	return err
 }
 
-const finishReception = `-- name: FinishReception :exec
+const finishReception = `-- name: FinishReception :one
 UPDATE receptions
-SET status='finished'
-WHERE id=$1
+SET status='close'
+WHERE id=(SELECT id FROM receptions R WHERE R.pvz_id=$1 AND R.status='in_progress' LIMIT 1)
+RETURNING id, date_time, pvz_id, status
 `
 
-func (q *Queries) FinishReception(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, finishReception, id)
-	return err
+func (q *Queries) FinishReception(ctx context.Context, pvzID uuid.UUID) (Reception, error) {
+	row := q.db.QueryRowContext(ctx, finishReception, pvzID)
+	var i Reception
+	err := row.Scan(
+		&i.ID,
+		&i.DateTime,
+		&i.PvzID,
+		&i.Status,
+	)
+	return i, err
 }
 
 const getOpenReceptionByPvzID = `-- name: GetOpenReceptionByPvzID :one
@@ -110,7 +112,7 @@ SELECT id, date_time, type, reception_id FROM products
 WHERE reception_id IN ($1)
 `
 
-func (q *Queries) GetProductsFromReception(ctx context.Context, receptionID uuid.NullUUID) ([]Product, error) {
+func (q *Queries) GetProductsFromReception(ctx context.Context, receptionID uuid.UUID) ([]Product, error) {
 	rows, err := q.db.QueryContext(ctx, getProductsFromReception, receptionID)
 	if err != nil {
 		return nil, err

@@ -14,12 +14,13 @@ import (
 )
 
 var (
-	ErrReceptionInProgress  = errors.New("reception in progress")
+	ErrReceptionInProgress  = errors.New("other reception in progress")
 	ErrNoOpenReceptionFound = errors.New("no in-progress reception found")
 )
 
 const (
 	errReceptionInProgressConflictCode = "20001"
+	errAddReceptionToFinishedReception = "20002"
 )
 
 type ReceptionRepository struct {
@@ -60,7 +61,7 @@ func (r *ReceptionRepository) CreateReception(ctx context.Context, req *request.
 	if err != nil {
 		pqErr, ok := err.(*pq.Error)
 		switch {
-		case ok && pqErr.Code == errReceptionInProgressConflictCode:
+		case ok && pqErr.Code == errAddReceptionToFinishedReception:
 			return nil, ErrReceptionInProgress
 		default:
 			return nil, err
@@ -71,6 +72,51 @@ func (r *ReceptionRepository) CreateReception(ctx context.Context, req *request.
 		ID:       res.ID,
 		DateTime: res.DateTime,
 		PvzID:    req.PvzID,
+		Status:   res.Status,
+	}, nil
+}
+
+func (r *ReceptionRepository) AddProductToReception(ctx context.Context, req *request.AddProduct, receptionID uuid.UUID) (*entity.Product, error) {
+	arg := db.AddProductToReceptionParams{
+		ID:          uuid.New(),
+		Type:        db.ProductType(req.Type),
+		ReceptionID: receptionID,
+	}
+
+	res, err := r.queries.AddProductToReception(ctx, arg)
+	if err != nil {
+		pqErr, ok := err.(*pq.Error)
+		switch {
+		case ok && pqErr.Code == errReceptionInProgressConflictCode:
+			return nil, ErrReceptionInProgress
+		default:
+			return nil, err
+		}
+	}
+
+	return &entity.Product{
+		ID:          res.ID,
+		DateTime:    res.DateTime,
+		Type:        entity.ProductType(res.Type),
+		ReceptionID: res.ID,
+	}, nil
+}
+
+func (r *ReceptionRepository) FinishReception(ctx context.Context, pvzID uuid.UUID) (*entity.Reception, error) {
+	res, err := r.queries.FinishReception(ctx, pvzID)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrNoOpenReceptionFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &entity.Reception{
+		ID:       res.ID,
+		DateTime: res.DateTime,
+		PvzID:    res.PvzID,
 		Status:   res.Status,
 	}, nil
 }

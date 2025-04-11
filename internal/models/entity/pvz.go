@@ -21,7 +21,7 @@ var Cities map[City]bool = map[City]bool{
 }
 
 type Pvz struct {
-	ID               uuid.UUID `json:"id"`
-	RegistrationDate time.Time `json:"registration_date"`
+	ID               uuid.UUID
+	RegistrationDate time.Time
 	City             string
 }

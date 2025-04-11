@@ -38,3 +38,10 @@ sql:
           package: "entity"
           type: "Status"
         go_struct_tag: json:"status"
+
+      - db_type: "product_enum"
+        go_type:
+          import: "github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
+          package: "entity"
+          type: "ProductType"
+        go_struct_tag: json:"type"

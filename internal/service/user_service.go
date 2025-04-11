@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 )
@@ -45,7 +46,7 @@ func (s *UserServiceImpl) DummyLogin(ctx context.Context, req *request.DummyLogi
 	}, nil
 }
 
-func (s *UserServiceImpl) Register(ctx context.Context, req *request.Register) (*response.Login, error) {
+func (s *UserServiceImpl) Register(ctx context.Context, req *request.Register) (*entity.User, error) {
 	res, err := s.repo.CreateUser(ctx, req)
 	if err != nil {
 		switch {
@@ -56,14 +57,7 @@ func (s *UserServiceImpl) Register(ctx context.Context, req *request.Register) (
 		}
 	}
 
-	tokenStr, err := s.tokenSrv.CraeteUserToken(res.ID, req.Role)
-	if err != nil {
-		return nil, apperror.NewInternal("cant create new token", err)
-	}
-
-	return &response.Login{
-		Token: tokenStr,
-	}, nil
+	return res, nil
 }
 
 func (s *UserServiceImpl) Login(ctx context.Context, req *request.Login) (*response.Login, error) {

@@ -58,7 +58,7 @@ func (app *App) initRoutes() {
 	employeeOnly := app.router.Group("/")
 	employeeOnly.Use(app.authService.AuthMiddleware(entity.ROLE_EMPLOYEE))
 	{
-		employeeOnly.POST("/pvz/:pvzid/close_last_reception", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, handler.CompleteReception))
+		employeeOnly.POST("/pvz/:pvzid/close_last_reception", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, handler.FinishReception))
 		employeeOnly.POST("/pvz/:pvzid/delete_last_product", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, handler.DeleteLastProduct))
 		employeeOnly.POST("/receptions", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, handler.CreateReception))
 		employeeOnly.POST("/products", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, handler.AddProductToReception))

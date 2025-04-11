@@ -17,8 +17,8 @@ SELECT * FROM receptions
 WHERE pvz_id IN ($1) AND date_time BETWEEN $2 AND $3;
 
 -- name: AddProductToReception :one
-INSERT INTO products (id, date_time, type, reception_id) VALUES
-($1, $2, $3, $4)
+INSERT INTO products (id, type, reception_id) VALUES
+($1, $2, $3)
 RETURNING *;
 
 -- name: GetProductsFromReception :many
@@ -29,7 +29,8 @@ WHERE reception_id IN ($1);
 DELETE FROM products
 WHERE id = $1;
 
--- name: FinishReception :exec
+-- name: FinishReception :one
 UPDATE receptions
-SET status='finished'
-WHERE id=$1;
+SET status='close'
+WHERE id=(SELECT id FROM receptions R WHERE R.pvz_id=$1 AND R.status='in_progress' LIMIT 1)
+RETURNING *;

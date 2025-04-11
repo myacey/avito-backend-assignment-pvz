@@ -26,6 +26,6 @@ func CreatePvz(ctx *gin.Context, service PvzService) error {
 	if err != nil {
 		return err
 	}
-	ctx.JSON(http.StatusOK, resp)
+	ctx.JSON(http.StatusCreated, resp)
 	return nil
 }

@@ -11,15 +11,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
 )
 
 type ReceptionService interface {
 	SearchReceptions(context.Context, *request.SearchPvz) (map[string]interface{}, error)
-	CompleteReception(context.Context, string) (*response.Reception, error)
-	DeleteLastProduct(context.Context, string) error
-	CreateReception(context.Context, *request.CreateReception) (*response.Reception, error)
-	AddProductToReception(context.Context, *request.AddProduct) error
+	FinishReception(context.Context, uuid.UUID) (*entity.Reception, error)
+	DeleteLastProduct(context.Context, uuid.UUID) error
+	CreateReception(context.Context, *request.CreateReception) (*entity.Reception, error)
+	AddProductToReception(context.Context, *request.AddProduct) (*entity.Product, error)
 }
 
 func SearchReceptions(ctx *gin.Context, sevice ReceptionService) error {
@@ -27,7 +28,7 @@ func SearchReceptions(ctx *gin.Context, sevice ReceptionService) error {
 
 	var query map[string]string
 	if err := ctx.BindQuery(&query); err != nil {
-		return apperror.NewBadReq("invalid req")
+		return apperror.NewBadReq("invalid req: " + err.Error())
 	}
 
 	page, limit := 1, 10
@@ -72,7 +73,7 @@ func SearchReceptions(ctx *gin.Context, sevice ReceptionService) error {
 	return nil
 }
 
-func CompleteReception(ctx *gin.Context, service ReceptionService) error {
+func FinishReception(ctx *gin.Context, service ReceptionService) error {
 	log.SetPrefix("http-server.handler.CloseLastReception")
 
 	pvzID, err := uuid.Parse(ctx.Param("pvzid"))
@@ -80,7 +81,7 @@ func CompleteReception(ctx *gin.Context, service ReceptionService) error {
 		return apperror.NewBadReq("invalid pvz id")
 	}
 
-	resp, err := service.CompleteReception(ctx, pvzID.String())
+	resp, err := service.FinishReception(ctx, pvzID)
 	if err != nil {
 		return err
 	}
@@ -97,7 +98,7 @@ func DeleteLastProduct(ctx *gin.Context, service ReceptionService) error {
 		return apperror.NewBadReq("invalid pvz id")
 	}
 
-	err = service.DeleteLastProduct(ctx, pvzID.String())
+	err = service.DeleteLastProduct(ctx, pvzID)
 	if err != nil {
 		return err
 	}
@@ -119,7 +120,7 @@ func CreateReception(ctx *gin.Context, service ReceptionService) error {
 		return err
 	}
 
-	ctx.JSON(http.StatusOK, resp)
+	ctx.JSON(http.StatusCreated, resp)
 	return nil
 }
 
@@ -128,14 +129,20 @@ func AddProductToReception(ctx *gin.Context, service ReceptionService) error {
 
 	var req request.AddProduct
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		return apperror.NewBadReq("invalid req")
+		return apperror.NewBadReq("invalid req: " + err.Error())
 	}
 
-	err := service.AddProductToReception(ctx, &req)
+	product, err := service.AddProductToReception(ctx, &req)
 	if err != nil {
 		return err
 	}
 
-	ctx.Status(http.StatusOK)
+	response := &response.AddProductToReception{
+		ID:          product.ID,
+		DateTime:    product.DateTime,
+		ProductType: string(product.Type),
+		ReceptionID: product.ReceptionID.String(),
+	}
+	ctx.JSON(http.StatusCreated, response)
 	return nil
 }

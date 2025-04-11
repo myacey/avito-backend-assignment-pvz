@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"database/sql/driver"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,9 +19,39 @@ var Statuses map[Status]bool = map[Status]bool{
 	STATUS_FINISHED:    true,
 }
 
+func (r Status) Value() (driver.Value, error) {
+	return string(r), nil
+}
+
+func (r *Status) Scan(value interface{}) error {
+	*r = Status(string(value.([]byte)))
+	return nil
+}
+
+type ProductType string
+
+const (
+	PRODUCT_TYPE_ELECTRONICS ProductType = "электроника"
+	PRODUCT_TYPE_CLOTHES     ProductType = "одежда"
+	PRODUCT_TYPE_SHOES       ProductType = "обувь"
+)
+
+var Productes map[ProductType]bool = map[ProductType]bool{
+	PRODUCT_TYPE_ELECTRONICS: true,
+	PRODUCT_TYPE_CLOTHES:     true,
+	PRODUCT_TYPE_SHOES:       true,
+}
+
 type Reception struct {
-	ID       uuid.UUID `json:"id"`
-	DateTime time.Time `json:"date_time"`
-	PvzID    uuid.UUID `json:"pvz_id"`
-	Status   Status    `json:"status"`
+	ID       uuid.UUID
+	DateTime time.Time
+	PvzID    uuid.UUID
+	Status   Status
+}
+
+type Product struct {
+	ID          uuid.UUID
+	DateTime    time.Time
+	Type        ProductType
+	ReceptionID uuid.UUID
 }

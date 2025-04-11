@@ -22,9 +22,9 @@ type CreatePvz struct {
 	City             string    `json:"city"`
 }
 
-type Reception struct {
-	ID       uuid.UUID `json:"id"`
-	DateTime time.Time `json:"date_time"`
-	PvzId    uuid.UUID `json:"pvz_id"`
-	Status   string    `json:"status"`
+type AddProductToReception struct {
+	ID          uuid.UUID `json:"id"`
+	DateTime    time.Time `json:"date_time"`
+	ProductType string    `json:"type"`
+	ReceptionID string    `json:"reception_id"`
 }

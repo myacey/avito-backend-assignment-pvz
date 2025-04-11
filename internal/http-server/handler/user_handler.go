@@ -14,7 +14,7 @@ import (
 
 type UserService interface {
 	DummyLogin(context.Context, *request.DummyLogin) (*response.Login, error)
-	Register(context.Context, *request.Register) (*response.Login, error)
+	Register(context.Context, *request.Register) (*entity.User, error)
 	Login(context.Context, *request.Login) (*response.Login, error)
 }
 
@@ -55,7 +55,7 @@ func Register(ctx *gin.Context, service UserService) error {
 		return err
 	}
 
-	ctx.JSON(http.StatusOK, resp)
+	ctx.JSON(http.StatusCreated, resp)
 	return nil
 }
 

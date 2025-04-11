@@ -31,5 +31,5 @@ CREATE TABLE IF NOT EXISTS products (
     "id" UUID PRIMARY KEY,
     "date_time" TIMESTAMPTZ NOT NULL DEFAULT(NOW()),
     "type" product_type NOT NULL,
-    "reception_id" UUID REFERENCES receptions ("id")
+    "reception_id" UUID REFERENCES receptions ("id") NOT NULL
 );
