@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 const addProductToReception = `-- name: AddProductToReception :one
@@ -159,19 +160,19 @@ func (q *Queries) GetProductsFromReception(ctx context.Context, receptionID uuid
 	return items, nil
 }
 
-const getReceptionsByPvzAndTime = `-- name: GetReceptionsByPvzAndTime :many
+const searchReceptionsByPvzsAndTime = `-- name: SearchReceptionsByPvzsAndTime :many
 SELECT id, date_time, pvz_id, status FROM receptions
-WHERE pvz_id IN ($1) AND date_time BETWEEN $2 AND $3
+WHERE pvz_id = ANY($1::uuid[]) AND date_time BETWEEN $2 AND $3
 `
 
-type GetReceptionsByPvzAndTimeParams struct {
-	PvzID      uuid.UUID `json:"pvz_id"`
-	DateTime   time.Time `json:"date_time"`
-	DateTime_2 time.Time `json:"date_time_2"`
+type SearchReceptionsByPvzsAndTimeParams struct {
+	PvzIds    []uuid.UUID `json:"pvz_ids"`
+	StartDate time.Time   `json:"start_date"`
+	EndDate   time.Time   `json:"end_date"`
 }
 
-func (q *Queries) GetReceptionsByPvzAndTime(ctx context.Context, arg GetReceptionsByPvzAndTimeParams) ([]Reception, error) {
-	rows, err := q.db.QueryContext(ctx, getReceptionsByPvzAndTime, arg.PvzID, arg.DateTime, arg.DateTime_2)
+func (q *Queries) SearchReceptionsByPvzsAndTime(ctx context.Context, arg SearchReceptionsByPvzsAndTimeParams) ([]Reception, error) {
+	rows, err := q.db.QueryContext(ctx, searchReceptionsByPvzsAndTime, pq.Array(arg.PvzIds), arg.StartDate, arg.EndDate)
 	if err != nil {
 		return nil, err
 	}
@@ -198,18 +199,18 @@ func (q *Queries) GetReceptionsByPvzAndTime(ctx context.Context, arg GetReceptio
 	return items, nil
 }
 
-const getReceptionsByTime = `-- name: GetReceptionsByTime :many
+const searchReceptionsByTime = `-- name: SearchReceptionsByTime :many
 SELECT id, date_time, pvz_id, status FROM receptions
 WHERE date_time BETWEEN $1 AND $2
 `
 
-type GetReceptionsByTimeParams struct {
+type SearchReceptionsByTimeParams struct {
 	DateTime   time.Time `json:"date_time"`
 	DateTime_2 time.Time `json:"date_time_2"`
 }
 
-func (q *Queries) GetReceptionsByTime(ctx context.Context, arg GetReceptionsByTimeParams) ([]Reception, error) {
-	rows, err := q.db.QueryContext(ctx, getReceptionsByTime, arg.DateTime, arg.DateTime_2)
+func (q *Queries) SearchReceptionsByTime(ctx context.Context, arg SearchReceptionsByTimeParams) ([]Reception, error) {
+	rows, err := q.db.QueryContext(ctx, searchReceptionsByTime, arg.DateTime, arg.DateTime_2)
 	if err != nil {
 		return nil, err
 	}

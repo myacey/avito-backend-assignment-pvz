@@ -103,6 +103,36 @@ func (r *ReceptionRepository) AddProductToReception(ctx context.Context, req *re
 	}, nil
 }
 
+func (r *ReceptionRepository) SearchReceptions(ctx context.Context, req *request.SearchPvz, pvzIDs []uuid.UUID) ([]*entity.Reception, error) {
+	arg := db.SearchReceptionsByPvzsAndTimeParams{
+		PvzIds:    pvzIDs,
+		StartDate: req.StartDate,
+		EndDate:   req.EndDate,
+	}
+
+	res, err := r.queries.SearchReceptionsByPvzsAndTime(ctx, arg)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return []*entity.Reception{}, nil
+		default:
+			return nil, err
+		}
+	}
+
+	ans := make([]*entity.Reception, len(res))
+	for i, r := range res {
+		ans[i] = &entity.Reception{
+			ID:       r.ID,
+			DateTime: r.DateTime,
+			PvzID:    r.PvzID,
+			Status:   r.Status,
+		}
+	}
+
+	return ans, nil
+}
+
 func (r *ReceptionRepository) FinishReception(ctx context.Context, pvzID uuid.UUID) (*entity.Reception, error) {
 	res, err := r.queries.FinishReception(ctx, pvzID)
 	if err != nil {

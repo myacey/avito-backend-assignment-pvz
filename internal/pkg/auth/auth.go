@@ -36,7 +36,7 @@ func getToken(ctx *gin.Context) (string, error) {
 	return tokenStr, nil
 }
 
-func (s *AuthService) AuthMiddleware(neededRole entity.Role) gin.HandlerFunc {
+func (s *AuthService) AuthMiddleware(neededRole ...entity.Role) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token, err := getToken(ctx)
 		if err != nil {
@@ -59,19 +59,27 @@ func (s *AuthService) AuthMiddleware(neededRole entity.Role) gin.HandlerFunc {
 		}
 
 		r, ok := claims["role"]
-		if ok && r.(string) == string(neededRole) {
+		if !ok {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
+				Code:      http.StatusUnauthorized,
+				Message:   "invalid role",
+				RequestId: ctx.GetHeader("X-Request-Id"),
+			})
+		}
+
+		for _, nRole := range neededRole {
+			if r.(string) != string(nRole) {
+				continue
+			}
+
 			ctx.Set("User-Type", claims["role"])
 			ctx.Next()
 			return
 		}
 
-		msg := "invalid role"
-		if ok {
-			msg += ": " + r.(string)
-		}
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
 			Code:      http.StatusUnauthorized,
-			Message:   msg,
+			Message:   "invalid role",
 			RequestId: ctx.GetHeader("X-Request-Id"),
 		})
 	}

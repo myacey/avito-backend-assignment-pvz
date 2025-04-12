@@ -14,19 +14,51 @@ import (
 
 type ReceptionServiceImpl struct {
 	receptionRepo repository.ReceptionRepository
+	pvzSrv        PvzServiceImpl
 
 	conn *sql.DB
 }
 
-func NewReceptionService(repo repository.ReceptionRepository, conn *sql.DB) *ReceptionServiceImpl {
+func NewReceptionService(repo repository.ReceptionRepository, conn *sql.DB, pvzSrv PvzServiceImpl) *ReceptionServiceImpl {
 	return &ReceptionServiceImpl{
 		receptionRepo: repo,
 		conn:          conn,
+		pvzSrv:        pvzSrv,
 	}
 }
 
-func (s *ReceptionServiceImpl) SearchReceptions(ctx context.Context, req *request.SearchPvz) (map[string]interface{}, error) {
-	return nil, nil
+func (s *ReceptionServiceImpl) SearchReceptions(ctx context.Context, req *request.SearchPvz) ([]*entity.PvzWithReception, error) {
+	pvzs, err := s.pvzSrv.SearchPvz(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	pvzIDs := make([]uuid.UUID, len(pvzs))
+	for i, pvz := range pvzs {
+		pvzIDs[i] = pvz.ID
+	}
+
+	receptions, err := s.receptionRepo.SearchReceptions(ctx, req, pvzIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	receptionBYPvz := make(map[uuid.UUID][]*entity.Reception)
+	for _, r := range receptions {
+		receptionBYPvz[r.PvzID] = append(receptionBYPvz[r.PvzID], r)
+	}
+
+	res := make([]*entity.PvzWithReception, 0, len(pvzs))
+	for _, pvz := range pvzs {
+
+		pw := &entity.PvzWithReception{
+			Pvz:        pvz,
+			Receptions: receptionBYPvz[pvz.ID],
+		}
+		res = append(res, pw)
+	}
+
+	return res, nil
 }
 
 func (s *ReceptionServiceImpl) FinishReception(ctx context.Context, pvzID uuid.UUID) (*entity.Reception, error) {

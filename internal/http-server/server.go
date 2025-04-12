@@ -18,7 +18,7 @@ import (
 // RoleCheckerMiddleware is middleware interface
 // for checking account's roles.
 type RoleCheckerMiddleware interface {
-	AuthMiddleware(neededRole entity.Role) gin.HandlerFunc
+	AuthMiddleware(neededRole ...entity.Role) gin.HandlerFunc
 }
 
 type App struct {
@@ -54,6 +54,16 @@ func (app *App) initRoutes() {
 	app.router.POST("/dummyLogin", mappedHandler[handler.UserService](&app.service.UserService, handler.DummyLogin))
 	app.router.POST("/login", mappedHandler[handler.UserService](&app.service.UserService, handler.Login))
 	app.router.POST("/register", mappedHandler[handler.UserService](&app.service.UserService, handler.Register))
+
+	authorizedOnly := app.router.Group("/")
+	authorizedOnly.Use(app.authService.AuthMiddleware(
+		entity.ROLE_EMPLOYEE,
+		entity.ROLE_MODERATOR,
+	))
+	{
+		authorizedOnly.GET("/pvz", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, handler.SearchReceptions))
+	}
+	// app.router.GET("/pvz", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, handler.SearchReceptions))
 
 	employeeOnly := app.router.Group("/")
 	employeeOnly.Use(app.authService.AuthMiddleware(entity.ROLE_EMPLOYEE))

@@ -25,3 +25,8 @@ type Pvz struct {
 	RegistrationDate time.Time
 	City             string
 }
+
+type PvzWithReception struct {
+	Pvz        *Pvz         `json:"pvz"`
+	Receptions []*Reception `json:"receptions"`
+}

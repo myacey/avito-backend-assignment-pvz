@@ -20,10 +20,10 @@ type Querier interface {
 	GetLastProductInReception(ctx context.Context, receptionID uuid.UUID) (Product, error)
 	GetOpenReceptionByPvzID(ctx context.Context, pvzID uuid.UUID) (Reception, error)
 	GetProductsFromReception(ctx context.Context, receptionID uuid.UUID) ([]Product, error)
-	GetReceptionsByPvzAndTime(ctx context.Context, arg GetReceptionsByPvzAndTimeParams) ([]Reception, error)
-	GetReceptionsByTime(ctx context.Context, arg GetReceptionsByTimeParams) ([]Reception, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
-	SearchPvz(ctx context.Context, arg SearchPvzParams) ([]Pvz, error)
+	SearchPVZ(ctx context.Context, arg SearchPVZParams) ([]Pvz, error)
+	SearchReceptionsByPvzsAndTime(ctx context.Context, arg SearchReceptionsByPvzsAndTimeParams) ([]Reception, error)
+	SearchReceptionsByTime(ctx context.Context, arg SearchReceptionsByTimeParams) ([]Reception, error)
 }
 
 var _ Querier = (*Queries)(nil)

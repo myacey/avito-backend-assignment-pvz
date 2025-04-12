@@ -16,7 +16,7 @@ import (
 )
 
 type ReceptionService interface {
-	SearchReceptions(context.Context, *request.SearchPvz) (map[string]interface{}, error)
+	SearchReceptions(context.Context, *request.SearchPvz) ([]*entity.PvzWithReception, error)
 	FinishReception(context.Context, uuid.UUID) (*entity.Reception, error)
 	DeleteLastProduct(context.Context, uuid.UUID) error
 	CreateReception(context.Context, *request.CreateReception) (*entity.Reception, error)
@@ -26,34 +26,39 @@ type ReceptionService interface {
 func SearchReceptions(ctx *gin.Context, sevice ReceptionService) error {
 	log.SetPrefix("http-server.handler.SearchPvz")
 
-	var query map[string]string
-	if err := ctx.BindQuery(&query); err != nil {
-		return apperror.NewBadReq("invalid req: " + err.Error())
+	startDateStr := ctx.Query("startDate")
+	if startDateStr == "" {
+		return apperror.NewBadReq("start date can't be nil")
 	}
-
-	page, limit := 1, 10
-
-	startDate, err := time.Parse(time.RFC3339, query["startDate"])
+	startDate, err := time.Parse(time.RFC3339, startDateStr)
 	if err != nil {
-		return apperror.NewBadReq("invalid start date query param")
+		return apperror.NewBadReq("invalid start date: " + startDateStr)
 	}
 
-	endDate, err := time.Parse(time.RFC3339, query["endDate"])
+	endDateStr := ctx.Query("endDate")
+	if endDateStr == "" {
+		return apperror.NewBadReq("end date can't be nil")
+	}
+	endDate, err := time.Parse(time.RFC3339, endDateStr)
 	if err != nil {
-		return apperror.NewBadReq("invalid end date query param")
+		return apperror.NewBadReq("invalid end date: " + endDateStr)
 	}
 
-	if p, ok := query["page"]; ok {
-		page, err = strconv.Atoi(p)
-		if err != nil {
-			return apperror.NewBadReq("invalid page query param")
+	page := 1
+	pageStr := ctx.Query("page")
+	if pageStr != "" {
+		page, err = strconv.Atoi(pageStr)
+		if err != nil || page < 1 {
+			return apperror.NewBadReq("invalid page: " + pageStr)
 		}
 	}
 
-	if l, ok := query["limit"]; ok {
-		limit, err = strconv.Atoi(l)
-		if err != nil {
-			return apperror.NewBadReq("invalid limit query param")
+	limit := 10
+	limitStr := ctx.Query("limit")
+	if limitStr != "" {
+		limit, err = strconv.Atoi(limitStr)
+		if err != nil || limit < 1 {
+			return apperror.NewBadReq("invalid limit: " + limitStr)
 		}
 	}
 
@@ -64,7 +69,7 @@ func SearchReceptions(ctx *gin.Context, sevice ReceptionService) error {
 		Limit:     limit,
 	}
 
-	resp, err := sevice.SearchReceptions(ctx, req)
+	resp, err := sevice.SearchReceptions(ctx, req) // TODO: gen responses
 	if err != nil {
 		return err
 	}

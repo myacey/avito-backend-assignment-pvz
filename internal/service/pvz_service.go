@@ -23,6 +23,15 @@ func NewPvzService(repo repository.PvzRepository, conn *sql.DB) *PvzServiceImpl 
 	}
 }
 
+func (s *PvzServiceImpl) SearchPvz(ctx context.Context, req *request.SearchPvz) ([]*entity.Pvz, error) {
+	res, err := s.repo.SearchPvz(ctx, req)
+	if err != nil {
+		return nil, apperror.NewInternal("failed to find pvz", err)
+	}
+
+	return res, nil
+}
+
 func (s *PvzServiceImpl) CreatePvz(ctx context.Context, req *request.CreatePvz) (*entity.Pvz, error) {
 	resp, err := s.repo.CreatePvz(ctx, req)
 	if err != nil {

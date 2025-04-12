@@ -8,13 +8,13 @@ SELECT * FROM receptions
 WHERE pvz_id = $1 AND status = 'in_progress'
 LIMIT 1;
 
--- name: GetReceptionsByTime :many
+-- name: SearchReceptionsByTime :many
 SELECT * FROM receptions
 WHERE date_time BETWEEN $1 AND $2;
 
--- name: GetReceptionsByPvzAndTime :many
+-- name: SearchReceptionsByPvzsAndTime :many
 SELECT * FROM receptions
-WHERE pvz_id IN ($1) AND date_time BETWEEN $2 AND $3;
+WHERE pvz_id = ANY(@pvz_ids::uuid[]) AND date_time BETWEEN @start_date AND @end_date;
 
 -- name: AddProductToReception :one
 INSERT INTO products (id, type, reception_id) VALUES

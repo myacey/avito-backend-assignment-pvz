@@ -32,21 +32,18 @@ func (q *Queries) CreatePVZ(ctx context.Context, arg CreatePVZParams) (Pvz, erro
 	return i, err
 }
 
-const searchPvz = `-- name: SearchPvz :many
+const searchPVZ = `-- name: SearchPVZ :many
 SELECT id, registration_date, city FROM pvz
-WHERE id IN ($1)
-ORDER BY registration_date DESC
-LIMIT $2 OFFSET $3
+OFFSET $1 LIMIT $2
 `
 
-type SearchPvzParams struct {
-	ID     uuid.UUID `json:"id"`
-	Limit  int32     `json:"limit"`
-	Offset int32     `json:"offset"`
+type SearchPVZParams struct {
+	Offset int32 `json:"offset"`
+	Limit  int32 `json:"limit"`
 }
 
-func (q *Queries) SearchPvz(ctx context.Context, arg SearchPvzParams) ([]Pvz, error) {
-	rows, err := q.db.QueryContext(ctx, searchPvz, arg.ID, arg.Limit, arg.Offset)
+func (q *Queries) SearchPVZ(ctx context.Context, arg SearchPVZParams) ([]Pvz, error) {
+	rows, err := q.db.QueryContext(ctx, searchPVZ, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
