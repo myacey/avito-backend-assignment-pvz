@@ -1,3 +1,5 @@
+//go:generate mockgen -source=./user_service.go -destination=./mocks/user_service.go -package=mocks
+
 package service
 
 import (
@@ -19,15 +21,20 @@ type TokenService interface {
 	VerifyToken(tokenStr string) (map[string]interface{}, error)
 }
 
+type UserRepo interface {
+	CreateUser(ctx context.Context, req *request.Register) (*entity.User, error)
+	GetUser(ctx context.Context, req *request.Login) (*entity.User, error)
+}
+
 type UserServiceImpl struct {
-	repo repository.UserRepository
+	repo UserRepo
 
 	conn *sql.DB
 
 	tokenSrv TokenService
 }
 
-func NewUserService(repo repository.UserRepository, conn *sql.DB, tokenSrv TokenService) *UserServiceImpl {
+func NewUserService(repo UserRepo, conn *sql.DB, tokenSrv TokenService) *UserServiceImpl {
 	return &UserServiceImpl{
 		repo:     repo,
 		conn:     conn,
@@ -72,7 +79,7 @@ func (s *UserServiceImpl) Login(ctx context.Context, req *request.Login) (*respo
 
 	tokenStr, err := s.tokenSrv.CraeteUserToken(res.ID, string(res.Role))
 	if err != nil {
-		return nil, apperror.NewInternal("unable to craete", err)
+		return nil, apperror.NewInternal("failed to create token", err)
 	}
 
 	return &response.Login{

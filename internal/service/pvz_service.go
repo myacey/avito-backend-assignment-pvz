@@ -1,8 +1,9 @@
+//go:generate mockgen -source=./pvz_service.go -destination=./mocks/pvz_service.go -package=mocks
+
 package service
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
@@ -11,16 +12,18 @@ import (
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 )
 
-type PvzServiceImpl struct {
-	repo repository.PvzRepository
-
-	conn *sql.DB
+type PvzRepo interface {
+	CreatePvz(ctx context.Context, req *request.CreatePvz) (*entity.Pvz, error)
+	SearchPvz(ctx context.Context, req *request.SearchPvz) ([]*entity.Pvz, error)
 }
 
-func NewPvzService(repo repository.PvzRepository, conn *sql.DB) *PvzServiceImpl {
+type PvzServiceImpl struct {
+	repo PvzRepo
+}
+
+func NewPvzService(repo PvzRepo) *PvzServiceImpl {
 	return &PvzServiceImpl{
 		repo: repo,
-		conn: conn,
 	}
 }
 

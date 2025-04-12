@@ -1,3 +1,5 @@
+//go:generate mockgen -source=./reception_service.go -destination=./mocks/reception_service.go -package=mocks
+
 package service
 
 import (
@@ -12,14 +14,28 @@ import (
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 )
 
+type ReceptionRepo interface {
+	AddProductToReception(ctx context.Context, req *request.AddProduct, receptionID uuid.UUID) (*entity.Product, error)
+	CreateReception(ctx context.Context, req *request.CreateReception) (*entity.Reception, error)
+	DeleteProductInReception(ctx context.Context, productID uuid.UUID) error
+	FinishReception(ctx context.Context, pvzID uuid.UUID) (*entity.Reception, error)
+	GetLastOpenReception(ctx context.Context, pvzID uuid.UUID) (*entity.Reception, error)
+	SearchReceptions(ctx context.Context, req *request.SearchPvz, pvzIDs []uuid.UUID) ([]*entity.Reception, error)
+	GetLastProductInReception(ctx context.Context, receptionID uuid.UUID) (*entity.Product, error)
+}
+
+type PvzFinder interface {
+	SearchPvz(ctx context.Context, req *request.SearchPvz) ([]*entity.Pvz, error)
+}
+
 type ReceptionServiceImpl struct {
-	receptionRepo repository.ReceptionRepository
-	pvzSrv        PvzServiceImpl
+	receptionRepo ReceptionRepo
+	pvzSrv        PvzFinder
 
 	conn *sql.DB
 }
 
-func NewReceptionService(repo repository.ReceptionRepository, conn *sql.DB, pvzSrv PvzServiceImpl) *ReceptionServiceImpl {
+func NewReceptionService(repo ReceptionRepo, conn *sql.DB, pvzSrv PvzFinder) *ReceptionServiceImpl {
 	return &ReceptionServiceImpl{
 		receptionRepo: repo,
 		conn:          conn,
@@ -76,6 +92,12 @@ func (s *ReceptionServiceImpl) FinishReception(ctx context.Context, pvzID uuid.U
 }
 
 func (s *ReceptionServiceImpl) DeleteLastProduct(ctx context.Context, pvzID uuid.UUID) error {
+	tx, err := s.conn.BeginTx(ctx, nil)
+	if err != nil {
+		return apperror.NewInternal("failed to delete last product", err)
+	}
+	defer tx.Rollback()
+
 	openReception, err := s.receptionRepo.GetLastOpenReception(ctx, pvzID)
 	if err != nil {
 		switch {
@@ -84,6 +106,15 @@ func (s *ReceptionServiceImpl) DeleteLastProduct(ctx context.Context, pvzID uuid
 		default:
 			return apperror.NewInternal("failed to find open reception", err)
 		}
+	}
+
+	if openReception.Status == entity.STATUS_FINISHED { // smt went really wrong
+		return apperror.NewInternal(
+			"failed to find open reception",
+			errors.New(
+				"found closed reception while looked for closed IN SQL: "+
+					openReception.ID.String()),
+		)
 	}
 
 	lastProduct, err := s.receptionRepo.GetLastProductInReception(ctx, openReception.ID)
@@ -100,15 +131,23 @@ func (s *ReceptionServiceImpl) DeleteLastProduct(ctx context.Context, pvzID uuid
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrNoProduct):
-			return apperror.NewBadReq(err.Error())
+			return apperror.NewInternal("failed to delete product in reception", errors.New("found to product in reception, but found it before. id: "+lastProduct.ID.String()))
 		default:
 			return apperror.NewInternal("failed to delete product in reception", err)
 		}
 	}
+
+	tx.Commit()
 	return nil
 }
 
 func (s *ReceptionServiceImpl) CreateReception(ctx context.Context, req *request.CreateReception) (*entity.Reception, error) {
+	tx, err := s.conn.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, apperror.NewInternal("failed to craete reception", err)
+	}
+	defer tx.Rollback()
+
 	openReception, err := s.receptionRepo.GetLastOpenReception(ctx, req.PvzID)
 	if err != nil && !errors.Is(err, repository.ErrNoOpenReceptionFound) {
 		return nil, apperror.NewInternal("failed to create reception", err)
@@ -117,20 +156,36 @@ func (s *ReceptionServiceImpl) CreateReception(ctx context.Context, req *request
 		return nil, apperror.NewBadReq("can't start new reception, already in-progress: " + openReception.ID.String())
 	}
 
+	if openReception != nil && openReception.Status == entity.STATUS_IN_PROGRESS { // smt went really wrong
+		return nil, apperror.NewInternal(
+			"failed to find open reception",
+			errors.New(
+				"found open reception while looked for closed IN SQL: "+
+					openReception.ID.String()),
+		)
+	}
+
 	reception, err := s.receptionRepo.CreateReception(ctx, req)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrReceptionInProgress):
-			return nil, apperror.NewBadReq("can't start new reception, already in-progress: " + reception.ID.String())
+			return nil, apperror.NewBadReq("can't start new reception, already in-progress")
 		default:
 			return nil, apperror.NewInternal("failed to create reception", err)
 		}
 	}
 
+	tx.Commit()
 	return reception, nil
 }
 
 func (s *ReceptionServiceImpl) AddProductToReception(ctx context.Context, req *request.AddProduct) (*entity.Product, error) {
+	tx, err := s.conn.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, apperror.NewInternal("failed to add product to reception", err)
+	}
+	defer tx.Rollback()
+
 	openReception, err := s.receptionRepo.GetLastOpenReception(ctx, req.PvzID)
 	if err != nil {
 		switch {
@@ -145,11 +200,12 @@ func (s *ReceptionServiceImpl) AddProductToReception(ctx context.Context, req *r
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrReceptionInProgress):
-			return nil, apperror.NewBadReq("can't start new reception, other already in progress")
+			return nil, apperror.NewInternal("failed to add product to reception", errors.New("tried to add product to other open reception: id:"+openReception.ID.String()))
 		default:
 			return nil, apperror.NewInternal("failed to add product to reception", err)
 		}
 	}
 
+	tx.Commit()
 	return res, nil
 }
