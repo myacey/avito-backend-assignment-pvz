@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     "role" role_enum NOT NULL
 );
 
-CREATE TYPE city_enum AS ENUM('Москва', 'СПб', 'Казань');
+CREATE TYPE city_enum AS ENUM('Москва', 'Санкт-Петербург', 'Казань');
 
 CREATE TABLE IF NOT EXISTS pvz (
     "id" UUID PRIMARY KEY,
@@ -25,11 +25,11 @@ CREATE TABLE IF NOT EXISTS receptions (
 );
 CREATE INDEX ON receptions ("pvz_id", "status");
 
-CREATE TYPE product_type AS ENUM ('электроника', 'одежда', 'обувь');
+CREATE TYPE product_type_enum AS ENUM ('электроника', 'одежда', 'обувь');
 
 CREATE TABLE IF NOT EXISTS products (
     "id" UUID PRIMARY KEY,
     "date_time" TIMESTAMPTZ NOT NULL DEFAULT(NOW()),
-    "type" product_type NOT NULL,
+    "type" product_type_enum NOT NULL,
     "reception_id" UUID REFERENCES receptions ("id") NOT NULL
 );

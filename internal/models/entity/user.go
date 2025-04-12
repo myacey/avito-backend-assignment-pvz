@@ -2,8 +2,10 @@ package entity
 
 import (
 	"database/sql/driver"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 )
 
 type Role string
@@ -33,4 +35,16 @@ type User struct {
 	Email    string
 	Password string
 	Role     Role
+}
+
+func (u *User) ToResponse() *response.User {
+	return &response.User{
+		ID:    u.ID,
+		Email: u.Email,
+		Role:  string(u.Role),
+	}
+}
+
+func (u *User) MarshalJSON() ([]byte, error) {
+	return nil, errors.New("entity.User: direct JSON serialization forbidden, use response.User")
 }

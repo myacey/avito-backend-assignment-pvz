@@ -7,12 +7,14 @@ sql:
       go:
         package: "db"
         out: "../internal/repository/sqlc"
-        emit_json_tags: true
+        emit_json_tags: false
         emit_interface: true
         emit_empty_slices: true
+        omit_unused_structs: true
         overrides:
         - db_type: "timestamptz"
           go_type: "time.Time"
+
         - db_type: "uuid"
           go_type:
               import: "github.com/google/uuid"
@@ -39,7 +41,7 @@ sql:
             type: "Status"
           go_struct_tag: json:"status"
 
-        - db_type: "product_enum"
+        - db_type: "product_type_enum"
           go_type:
             import: "github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
             package: "entity"

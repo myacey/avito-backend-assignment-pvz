@@ -10,6 +10,8 @@ import (
 	db "github.com/myacey/avito-backend-assignment-pvz/internal/repository/sqlc"
 )
 
+var ErrPvzAlreadyExists = errors.New("pvz already exists")
+
 type PvzRepository struct {
 	queries *db.Queries
 }
@@ -39,7 +41,7 @@ func (r *PvzRepository) SearchPvz(ctx context.Context, req *request.SearchPvz) (
 		pvz[i] = &entity.Pvz{
 			ID:               r.ID,
 			RegistrationDate: r.RegistrationDate,
-			City:             string(r.City),
+			City:             r.City,
 		}
 	}
 
@@ -55,12 +57,17 @@ func (r *PvzRepository) CreatePvz(ctx context.Context, req *request.CreatePvz) (
 
 	res, err := r.queries.CreatePVZ(ctx, arg)
 	if err != nil {
-		return nil, err
+		switch {
+		case isUniqueViolation(err):
+			return nil, ErrPvzAlreadyExists
+		default:
+			return nil, err
+		}
 	}
 
 	return &entity.Pvz{
 		ID:               req.ID,
 		RegistrationDate: res.RegistrationDate,
-		City:             string(res.City),
+		City:             res.City,
 	}, nil
 }

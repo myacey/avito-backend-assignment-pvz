@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
@@ -35,7 +36,12 @@ func (s *PvzServiceImpl) SearchPvz(ctx context.Context, req *request.SearchPvz) 
 func (s *PvzServiceImpl) CreatePvz(ctx context.Context, req *request.CreatePvz) (*entity.Pvz, error) {
 	resp, err := s.repo.CreatePvz(ctx, req)
 	if err != nil {
-		return nil, apperror.NewBadReq("invalid req")
+		switch {
+		case errors.Is(err, repository.ErrPvzAlreadyExists):
+			return nil, apperror.NewBadReq(err.Error())
+		default:
+			return nil, apperror.NewInternal("failed to craete repository", err)
+		}
 	}
 
 	return resp, err

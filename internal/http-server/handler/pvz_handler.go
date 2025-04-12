@@ -22,10 +22,14 @@ func CreatePvz(ctx *gin.Context, service PvzService) error {
 		return apperror.NewBadReq("invalid req: " + err.Error())
 	}
 
-	resp, err := service.CreatePvz(ctx, &req)
+	if _, ok := entity.Cities[entity.City(req.City)]; !ok {
+		return apperror.NewBadReq("invalid city: " + req.City)
+	}
+
+	pvz, err := service.CreatePvz(ctx, &req)
 	if err != nil {
 		return err
 	}
-	ctx.JSON(http.StatusCreated, resp)
+	ctx.JSON(http.StatusCreated, pvz.ToResponse())
 	return nil
 }

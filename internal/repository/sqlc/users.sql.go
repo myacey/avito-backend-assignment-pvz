@@ -19,10 +19,10 @@ RETURNING id, email, password, role
 `
 
 type CreateUserParams struct {
-	ID       uuid.UUID   `json:"id"`
-	Email    string      `json:"email"`
-	Password string      `json:"password"`
-	Role     entity.Role `json:"role"`
+	ID       uuid.UUID
+	Email    string
+	Password string
+	Role     entity.Role
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {

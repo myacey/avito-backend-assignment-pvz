@@ -69,9 +69,13 @@ func SearchReceptions(ctx *gin.Context, sevice ReceptionService) error {
 		Limit:     limit,
 	}
 
-	resp, err := sevice.SearchReceptions(ctx, req) // TODO: gen responses
+	pvzWithReceptions, err := sevice.SearchReceptions(ctx, req) // TODO: gen responses
 	if err != nil {
 		return err
+	}
+	resp := make([]*response.PvzWithReception, len(pvzWithReceptions))
+	for i, v := range pvzWithReceptions {
+		resp[i] = v.ToResponse()
 	}
 
 	ctx.JSON(http.StatusOK, resp)
@@ -86,12 +90,12 @@ func FinishReception(ctx *gin.Context, service ReceptionService) error {
 		return apperror.NewBadReq("invalid pvz id")
 	}
 
-	resp, err := service.FinishReception(ctx, pvzID)
+	reception, err := service.FinishReception(ctx, pvzID)
 	if err != nil {
 		return err
 	}
 
-	ctx.JSON(http.StatusOK, resp)
+	ctx.JSON(http.StatusOK, reception.ToResponse())
 	return nil
 }
 
@@ -120,12 +124,12 @@ func CreateReception(ctx *gin.Context, service ReceptionService) error {
 		return apperror.NewBadReq("invalid req: " + err.Error())
 	}
 
-	resp, err := service.CreateReception(ctx, &req)
+	reception, err := service.CreateReception(ctx, &req)
 	if err != nil {
 		return err
 	}
 
-	ctx.JSON(http.StatusCreated, resp)
+	ctx.JSON(http.StatusCreated, reception.ToResponse())
 	return nil
 }
 
@@ -146,12 +150,6 @@ func AddProductToReception(ctx *gin.Context, service ReceptionService) error {
 		return err
 	}
 
-	response := &response.AddProductToReception{
-		ID:          product.ID,
-		DateTime:    product.DateTime,
-		ProductType: string(product.Type),
-		ReceptionID: product.ReceptionID.String(),
-	}
-	ctx.JSON(http.StatusCreated, response)
+	ctx.JSON(http.StatusCreated, product.ToResponse())
 	return nil
 }

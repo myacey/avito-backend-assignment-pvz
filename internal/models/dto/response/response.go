@@ -16,15 +16,33 @@ type Login struct {
 	Token string `json:"token"`
 }
 
-type CreatePvz struct {
+type Pvz struct {
 	ID               uuid.UUID `json:"id"`
 	RegistrationDate time.Time `json:"registration_date"`
 	City             string    `json:"city"`
 }
 
-type AddProductToReception struct {
+type Product struct {
 	ID          uuid.UUID `json:"id"`
 	DateTime    time.Time `json:"date_time"`
 	ProductType string    `json:"type"`
-	ReceptionID string    `json:"reception_id"`
+	ReceptionID uuid.UUID `json:"reception_id"`
+}
+
+type User struct {
+	ID    uuid.UUID `json:"id"`
+	Email string    `json:"email"`
+	Role  string    `json:"role"`
+}
+
+type Reception struct {
+	ID       uuid.UUID `json:"id"`
+	DateTime time.Time `json:"date_time"`
+	PvzID    uuid.UUID `json:"pvz_id"`
+	Status   string    `json:"status"`
+}
+
+type PvzWithReception struct {
+	Pvz        *Pvz         `json:"pvz"`
+	Receptions []*Reception `json:"receptions"`
 }

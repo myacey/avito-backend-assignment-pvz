@@ -20,9 +20,9 @@ RETURNING id, registration_date, city
 `
 
 type CreatePVZParams struct {
-	ID               uuid.UUID   `json:"id"`
-	RegistrationDate time.Time   `json:"registration_date"`
-	City             entity.City `json:"city"`
+	ID               uuid.UUID
+	RegistrationDate time.Time
+	City             entity.City
 }
 
 func (q *Queries) CreatePVZ(ctx context.Context, arg CreatePVZParams) (Pvz, error) {
@@ -38,8 +38,8 @@ OFFSET $1 LIMIT $2
 `
 
 type SearchPVZParams struct {
-	Offset int32 `json:"offset"`
-	Limit  int32 `json:"limit"`
+	Offset int32
+	Limit  int32
 }
 
 func (q *Queries) SearchPVZ(ctx context.Context, arg SearchPVZParams) ([]Pvz, error) {

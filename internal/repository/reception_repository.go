@@ -80,7 +80,7 @@ func (r *ReceptionRepository) CreateReception(ctx context.Context, req *request.
 func (r *ReceptionRepository) AddProductToReception(ctx context.Context, req *request.AddProduct, receptionID uuid.UUID) (*entity.Product, error) {
 	arg := db.AddProductToReceptionParams{
 		ID:          uuid.New(),
-		Type:        db.ProductType(req.Type),
+		Type:        entity.ProductType(req.Type),
 		ReceptionID: receptionID,
 	}
 

@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	entity "github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 )
 
 const addProductToReception = `-- name: AddProductToReception :one
@@ -20,9 +21,9 @@ RETURNING id, date_time, type, reception_id
 `
 
 type AddProductToReceptionParams struct {
-	ID          uuid.UUID   `json:"id"`
-	Type        ProductType `json:"type"`
-	ReceptionID uuid.UUID   `json:"reception_id"`
+	ID          uuid.UUID
+	Type        entity.ProductType
+	ReceptionID uuid.UUID
 }
 
 func (q *Queries) AddProductToReception(ctx context.Context, arg AddProductToReceptionParams) (Product, error) {
@@ -44,9 +45,9 @@ RETURNING id, date_time, pvz_id, status
 `
 
 type CreateReceptionParams struct {
-	ID       uuid.UUID `json:"id"`
-	DateTime time.Time `json:"date_time"`
-	PvzID    uuid.UUID `json:"pvz_id"`
+	ID       uuid.UUID
+	DateTime time.Time
+	PvzID    uuid.UUID
 }
 
 func (q *Queries) CreateReception(ctx context.Context, arg CreateReceptionParams) (Reception, error) {
@@ -166,9 +167,9 @@ WHERE pvz_id = ANY($1::uuid[]) AND date_time BETWEEN $2 AND $3
 `
 
 type SearchReceptionsByPvzsAndTimeParams struct {
-	PvzIds    []uuid.UUID `json:"pvz_ids"`
-	StartDate time.Time   `json:"start_date"`
-	EndDate   time.Time   `json:"end_date"`
+	PvzIds    []uuid.UUID
+	StartDate time.Time
+	EndDate   time.Time
 }
 
 func (q *Queries) SearchReceptionsByPvzsAndTime(ctx context.Context, arg SearchReceptionsByPvzsAndTimeParams) ([]Reception, error) {
@@ -205,8 +206,8 @@ WHERE date_time BETWEEN $1 AND $2
 `
 
 type SearchReceptionsByTimeParams struct {
-	DateTime   time.Time `json:"date_time"`
-	DateTime_2 time.Time `json:"date_time_2"`
+	DateTime   time.Time
+	DateTime_2 time.Time
 }
 
 func (q *Queries) SearchReceptionsByTime(ctx context.Context, arg SearchReceptionsByTimeParams) ([]Reception, error) {

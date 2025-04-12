@@ -50,12 +50,12 @@ func Register(ctx *gin.Context, service UserService) error {
 		return apperror.NewBadReq("invalid rol: " + req.Role)
 	}
 
-	resp, err := service.Register(ctx, &req)
+	usr, err := service.Register(ctx, &req)
 	if err != nil {
 		return err
 	}
 
-	ctx.JSON(http.StatusCreated, resp)
+	ctx.JSON(http.StatusCreated, usr.ToResponse())
 	return nil
 }
 
