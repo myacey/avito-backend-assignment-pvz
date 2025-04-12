@@ -47,7 +47,7 @@ func NewServer(cfg ServerConfig, handler *gin.Engine) *BaseServer {
 	// server tweaks
 	s.httpServer = &http.Server{
 		Addr:              cfg.Listen,
-		Handler:           s.engine.Handler(),
+		Handler:           s.engine,
 		ReadTimeout:       cfg.ReadTimeout,
 		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
 		WriteTimeout:      cfg.WriteTimeout,
@@ -75,9 +75,6 @@ func (s *BaseServer) getPing(ctx *gin.Context) {
 }
 
 func (s *BaseServer) Run(ctx context.Context) error {
-	s.Router().GET("/live", func(_ *gin.Context) {})
-	s.Router().GET("/ping", s.getPing)
-
 	go func() {
 		for {
 			<-ctx.Done()

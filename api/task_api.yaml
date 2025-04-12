@@ -15,6 +15,10 @@ components:
         id:
           type: string
           format: uuid
+          x-go-type: "uuid.UUID"
+          x-go-type-import:
+            name: "uuid"
+            path: "github.com/google/uuid"
         email:
           type: string
           format: email
@@ -29,6 +33,10 @@ components:
         id:
           type: string
           format: uuid
+          x-go-type: "uuid.UUID"
+          x-go-type-import:
+            name: "uuid"
+            path: "github.com/google/uuid"
         registrationDate:
           type: string
           format: date-time
@@ -43,12 +51,20 @@ components:
         id:
           type: string
           format: uuid
+          x-go-type: "uuid.UUID"
+          x-go-type-import:
+            name: "uuid"
+            path: "github.com/google/uuid"
         dateTime:
           type: string
           format: date-time
         pvzId:
           type: string
           format: uuid
+          x-go-type: "uuid.UUID"
+          x-go-type-import:
+            name: "uuid"
+            path: "github.com/google/uuid"
         status:
           type: string
           enum: [in_progress, close]
@@ -60,6 +76,10 @@ components:
         id:
           type: string
           format: uuid
+          x-go-type: "uuid.UUID"
+          x-go-type-import:
+            name: "uuid"
+            path: "github.com/google/uuid"
         dateTime:
           type: string
           format: date-time
@@ -69,6 +89,10 @@ components:
         receptionId:
           type: string
           format: uuid
+          x-go-type: "uuid.UUID"
+          x-go-type-import:
+            name: "uuid"
+            path: "github.com/google/uuid"
       required: [type, receptionId]
 
     Error:
@@ -279,6 +303,10 @@ paths:
           schema:
             type: string
             format: uuid
+            x-go-type: "uuid.UUID"
+            x-go-type-import:
+              name: "uuid"
+              path: "github.com/google/uuid"
       responses:
         '200':
           description: Приемка закрыта
@@ -312,6 +340,10 @@ paths:
           schema:
             type: string
             format: uuid
+            x-go-type: "uuid.UUID"
+            x-go-type-import:
+              name: "uuid"
+              path: "github.com/google/uuid"
       responses:
         '200':
           description: Товар удален
@@ -343,6 +375,10 @@ paths:
                 pvzId:
                   type: string
                   format: uuid
+                  x-go-type: "uuid.UUID"
+                  x-go-type-import:
+                    name: "uuid"
+                    path: "github.com/google/uuid"
               required: [pvzId]
       responses:
         '201':
@@ -382,6 +418,10 @@ paths:
                 pvzId:
                   type: string
                   format: uuid
+                  x-go-type: "uuid.UUID"
+                  x-go-type-import:
+                    name: "uuid"
+                    path: "github.com/google/uuid"
               required: [type, pvzId]
       responses:
         '201':

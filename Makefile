@@ -4,9 +4,12 @@ new_migration:
 sqlc:
 	sqlc generate -f ./db/sqlc.yaml
 
-codegen:
+apigen:
 	oapi-codegen --config=./configs/oapi.yaml api/task_api.yaml
 
-all: sqlc
+gogen:
+	go generate ./...
+
+all: sqlc apigen gogen
 	docker compose up -d
 	go run ./cmd/main.go
