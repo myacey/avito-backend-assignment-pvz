@@ -42,17 +42,4 @@ jobs:
         
       - name: Run tests with Coverage
         run: |
-          go test -v -coverprofile=coverage.out ./...
-          echo "COVERAGE=$(go tool cover -func=coverage.out | grep total | awk'{print $3}')" >> $GITHUB_ENV
-
-      - name: Generate Coverage Badge
-        uses: jandelgado/coverage-badge-go@v1.3.0
-        with:
-          coverage-file: coverage.out
-          output-file: coverage.svg
-
-      - name: Upload Coverage Badge
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Update coverage badge"
-          file_pattern: coverage.svg
+          go test -v ./...
