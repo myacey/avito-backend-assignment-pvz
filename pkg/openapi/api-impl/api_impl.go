@@ -89,7 +89,7 @@ func NewAPIHandlerWithFuncs(svc *service.Service) *APIHandlerWithFuncs {
 			}
 		},
 		PostPvzPvzIdCloseLastReceptionFunc: func(c *gin.Context, pvzId types.UUID) {
-			if err := handler.CompleteReception(c, &svc.ReceptionService); err != nil {
+			if err := handler.FinishReception(c, &svc.ReceptionService); err != nil {
 				c.JSON(http.StatusInternalServerError, openapi.Error{Message: err.Error()})
 			}
 		},

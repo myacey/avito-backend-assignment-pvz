@@ -38,11 +38,11 @@ func main() {
 	tokenSrv := jwt_token.New(cfg.TokenService)
 	authSrv := auth.New(tokenSrv)
 
-	pvzSrv := *service.NewPvzService(*pvzRepo, conn)
+	pvzSrv := *service.NewPvzService(pvzRepo)
 	app := http_server.New(&service.Service{
-		UserService:      *service.NewUserService(*userRepo, conn, tokenSrv),
+		UserService:      *service.NewUserService(userRepo, conn, tokenSrv),
 		PvzService:       pvzSrv,
-		ReceptionService: *service.NewReceptionService(*receptionRepo, conn, pvzSrv),
+		ReceptionService: *service.NewReceptionService(receptionRepo, conn, &pvzSrv),
 	}, cfg, authSrv)
 
 	go func() {
