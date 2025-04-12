@@ -1,0 +1,58 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: CI
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+    
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/checkout@v4
+        with:
+          go-version: '1.23'
+
+      - name: Build
+        run: go build -v ./...
+
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/checkout@v4
+        with:
+          go-version: '1.23'
+        
+      - name: Run tests with Coverage
+        run: |
+          go test -v -coverprofile=coverage.out ./...
+          echo "COVERAGE=$(go tool cover -func=coverage.out | grep total | awk'{print $3}')" >> $GITHUB_ENV
+
+      - name: Generate Coverage Badge
+        uses: jandelgado/coverage-badge-go@v1.3.0
+        with:
+          coverage-file: coverage.out
+          output-file: coverage.svg
+
+      - name: Upload Coverage Badge
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update coverage badge"
+          file_pattern: coverage.svg
