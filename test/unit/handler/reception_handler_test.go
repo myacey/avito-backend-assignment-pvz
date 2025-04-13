@@ -35,8 +35,9 @@ func TestPostProducts(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	service := mocks.NewMockReceptionService(ctrl)
+	authSrv := mocks.NewMockRoleCheckerMiddleware(ctrl)
 
-	handler := handler.NewHandler(service, nil, nil)
+	handler := handler.NewHandler(service, nil, nil, authSrv)
 	testCases := []struct {
 		name         string
 		req          interface{}
@@ -51,6 +52,7 @@ func TestPostProducts(t *testing.T) {
 				PvzID: pvz.ID,
 			},
 			mockBehavior: func(req interface{}) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				service.EXPECT().AddProductToReception(gomock.Any(), req).Return(product, nil)
 			},
 			expBody: product.ToResponse(),
@@ -60,6 +62,7 @@ func TestPostProducts(t *testing.T) {
 			name: "invalid req",
 			req:  "invalid",
 			mockBehavior: func(req interface{}) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				// service.EXPECT().AddProductToReception(gomock.Any(), req).Return(product, nil)
 			},
 			expCode: http.StatusBadRequest,
@@ -71,6 +74,7 @@ func TestPostProducts(t *testing.T) {
 				PvzID: pvz.ID,
 			},
 			mockBehavior: func(req interface{}) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				// service.EXPECT().AddProductToReception(gomock.Any(), req).Return(product, nil)
 			},
 			// expBody: product.ToResponse(),
@@ -83,6 +87,7 @@ func TestPostProducts(t *testing.T) {
 				PvzID: pvz.ID,
 			},
 			mockBehavior: func(req interface{}) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				service.EXPECT().AddProductToReception(gomock.Any(), req).Return(nil, errMock)
 			},
 			expCode: http.StatusInternalServerError,
@@ -123,8 +128,9 @@ func TestPostPvzPvzIdDeleteLastProduct(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	service := mocks.NewMockReceptionService(ctrl)
+	authSrv := mocks.NewMockRoleCheckerMiddleware(ctrl)
 
-	handler := handler.NewHandler(service, nil, nil)
+	handler := handler.NewHandler(service, nil, nil, authSrv)
 	testCases := []struct {
 		name         string
 		pvzID        uuid.UUID
@@ -136,6 +142,7 @@ func TestPostPvzPvzIdDeleteLastProduct(t *testing.T) {
 			name:  "ok",
 			pvzID: pvz.ID,
 			mockBehavior: func(pvzID uuid.UUID) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				service.EXPECT().DeleteLastProduct(gomock.Any(), pvzID).Return(nil)
 			},
 			expBody: "",
@@ -145,6 +152,7 @@ func TestPostPvzPvzIdDeleteLastProduct(t *testing.T) {
 			name:  "service err",
 			pvzID: pvz.ID,
 			mockBehavior: func(pvzID uuid.UUID) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				service.EXPECT().DeleteLastProduct(gomock.Any(), pvzID).Return(errMock)
 			},
 			expCode: http.StatusInternalServerError,
@@ -174,8 +182,9 @@ func TestPostPvzPvzIdCloseLastReception(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	service := mocks.NewMockReceptionService(ctrl)
+	authSrv := mocks.NewMockRoleCheckerMiddleware(ctrl)
 
-	handler := handler.NewHandler(service, nil, nil)
+	handler := handler.NewHandler(service, nil, nil, authSrv)
 	testCases := []struct {
 		name         string
 		pvzID        uuid.UUID
@@ -187,6 +196,7 @@ func TestPostPvzPvzIdCloseLastReception(t *testing.T) {
 			name:  "ok",
 			pvzID: pvz.ID,
 			mockBehavior: func(pvzID uuid.UUID) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				service.EXPECT().FinishReception(gomock.Any(), pvzID).Return(reception, nil)
 			},
 			expBody: reception.ToResponse(),
@@ -196,6 +206,7 @@ func TestPostPvzPvzIdCloseLastReception(t *testing.T) {
 			name:  "service err",
 			pvzID: pvz.ID,
 			mockBehavior: func(pvzID uuid.UUID) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				service.EXPECT().FinishReception(gomock.Any(), pvzID).Return(nil, errMock)
 			},
 			expCode: http.StatusInternalServerError,
@@ -228,8 +239,9 @@ func TestGetPvz(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	service := mocks.NewMockReceptionService(ctrl)
+	authSrv := mocks.NewMockRoleCheckerMiddleware(ctrl)
 
-	handler := handler.NewHandler(service, nil, nil)
+	handler := handler.NewHandler(service, nil, nil, authSrv)
 
 	receptionResp := reception.ToResponse()
 	testCases := []struct {
@@ -248,6 +260,7 @@ func TestGetPvz(t *testing.T) {
 				Limit:     &limit,
 			},
 			mockBehavior: func(req openapi.GetPvzParams) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				service.EXPECT().SearchReceptions(gomock.Any(), &request.SearchPvz{
 					StartDate: *req.StartDate,
 					EndDate:   *req.EndDate,
@@ -271,6 +284,7 @@ func TestGetPvz(t *testing.T) {
 				Limit:     &limit,
 			},
 			mockBehavior: func(req openapi.GetPvzParams) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				service.EXPECT().SearchReceptions(gomock.Any(), &request.SearchPvz{
 					StartDate: *req.StartDate,
 					EndDate:   *req.EndDate,
@@ -308,8 +322,9 @@ func TestPostReceptions(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	service := mocks.NewMockReceptionService(ctrl)
+	authSrv := mocks.NewMockRoleCheckerMiddleware(ctrl)
 
-	handler := handler.NewHandler(service, nil, nil)
+	handler := handler.NewHandler(service, nil, nil, authSrv)
 	testCases := []struct {
 		name         string
 		req          interface{}
@@ -323,6 +338,7 @@ func TestPostReceptions(t *testing.T) {
 				PvzID: pvz.ID,
 			},
 			mockBehavior: func(req interface{}) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				service.EXPECT().CreateReception(gomock.Any(), req).Return(reception, nil)
 			},
 			expBody: reception.ToResponse(),
@@ -332,6 +348,7 @@ func TestPostReceptions(t *testing.T) {
 			name: "invalid req",
 			req:  "invalid",
 			mockBehavior: func(req interface{}) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				// service.EXPECT().CreateReception(gomock.Any(), req).Return(reception, nil)
 			},
 			expCode: http.StatusBadRequest,
@@ -342,6 +359,7 @@ func TestPostReceptions(t *testing.T) {
 				PvzID: pvz.ID,
 			},
 			mockBehavior: func(req interface{}) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_EMPLOYEE).Return(func(ctx *gin.Context) {})
 				service.EXPECT().CreateReception(gomock.Any(), req).Return(nil, errMock)
 			},
 			expCode: http.StatusInternalServerError,

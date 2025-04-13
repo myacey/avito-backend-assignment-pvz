@@ -20,6 +20,12 @@ type PvzService interface {
 // PostPvz creates a new pvz with moderator auth.
 func (h Handler) PostPvz(ctx *gin.Context) {
 	log.SetPrefix("http-server.handler.CreatePvz")
+
+	h.authSrv.AuthMiddleware(entity.ROLE_MODERATOR)(ctx)
+	if ctx.IsAborted() {
+		return
+	}
+
 	var req request.CreatePvz
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		wrapCtxWithError(ctx, apperror.NewBadReq("invalid req: "+err.Error()))

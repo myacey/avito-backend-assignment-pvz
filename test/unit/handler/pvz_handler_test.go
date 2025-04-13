@@ -30,8 +30,9 @@ func TestPostPvz(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	service := mocks.NewMockPvzService(ctrl)
+	authSrv := mocks.NewMockRoleCheckerMiddleware(ctrl)
 
-	handler := handler.NewHandler(nil, service, nil)
+	handler := handler.NewHandler(nil, service, nil, authSrv)
 	testCases := []struct {
 		name         string
 		req          interface{}
@@ -47,6 +48,7 @@ func TestPostPvz(t *testing.T) {
 				City:             string(pvz.City),
 			},
 			mockBehavior: func(req interface{}) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_MODERATOR).Return(func(ctx *gin.Context) {})
 				service.EXPECT().CreatePvz(gomock.Any(), req).Return(pvz, nil)
 			},
 			expBody: &response.Pvz{
@@ -60,6 +62,7 @@ func TestPostPvz(t *testing.T) {
 			name: "invalid req",
 			req:  "invalid",
 			mockBehavior: func(req interface{}) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_MODERATOR).Return(func(ctx *gin.Context) {})
 				// service.EXPECT().CreatePvz(gomock.Any(), req).Return(pvz, nil)
 			},
 			expCode: http.StatusBadRequest,
@@ -72,6 +75,7 @@ func TestPostPvz(t *testing.T) {
 				City:             "invalid",
 			},
 			mockBehavior: func(req interface{}) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_MODERATOR).Return(func(ctx *gin.Context) {})
 				// service.EXPECT().CreatePvz(gomock.Any(), req).Return(pvz, nil)
 			},
 			expCode: http.StatusBadRequest,
@@ -84,6 +88,7 @@ func TestPostPvz(t *testing.T) {
 				City:             string(pvz.City),
 			},
 			mockBehavior: func(req interface{}) {
+				authSrv.EXPECT().AuthMiddleware(entity.ROLE_MODERATOR).Return(func(ctx *gin.Context) {})
 				service.EXPECT().CreatePvz(gomock.Any(), req).Return(nil, errMock)
 			},
 			expCode: http.StatusInternalServerError,

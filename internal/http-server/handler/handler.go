@@ -1,3 +1,5 @@
+//go:generate mockgen -source=./handler.go -destination=./mocks/handler.go -package=mocks
+
 package handler
 
 import (
@@ -6,20 +8,30 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
 )
+
+// RoleCheckerMiddleware is middleware interface
+// for checking account's roles.
+type RoleCheckerMiddleware interface {
+	AuthMiddleware(neededRole ...entity.Role) gin.HandlerFunc
+}
 
 type Handler struct {
 	receptionSrv ReceptionService
 	pvzSrv       PvzService
 	userSrv      UserService
+
+	authSrv RoleCheckerMiddleware
 }
 
-func NewHandler(receptionSrv ReceptionService, pvzSrv PvzService, usrSrv UserService) *Handler {
+func NewHandler(receptionSrv ReceptionService, pvzSrv PvzService, usrSrv UserService, autSrv RoleCheckerMiddleware) *Handler {
 	return &Handler{
 		receptionSrv: receptionSrv,
 		pvzSrv:       pvzSrv,
 		userSrv:      usrSrv,
+		authSrv:      autSrv,
 	}
 }
 

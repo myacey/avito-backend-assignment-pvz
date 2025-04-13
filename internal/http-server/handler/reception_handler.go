@@ -28,6 +28,11 @@ type ReceptionService interface {
 func (h Handler) GetPvz(ctx *gin.Context, params openapi.GetPvzParams) {
 	log.SetPrefix("http-server.handler.SearchPvz")
 
+	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE, entity.ROLE_MODERATOR)(ctx)
+	if ctx.IsAborted() {
+		return
+	}
+
 	startDate := *params.StartDate
 	endDate := *params.EndDate
 
@@ -63,6 +68,11 @@ func (h Handler) GetPvz(ctx *gin.Context, params openapi.GetPvzParams) {
 func (h Handler) PostPvzPvzIdCloseLastReception(ctx *gin.Context, pvzID uuid.UUID) {
 	log.SetPrefix("http-server.handler.CloseLastReception")
 
+	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE)(ctx)
+	if ctx.IsAborted() {
+		return
+	}
+
 	reception, err := h.receptionSrv.FinishReception(ctx, pvzID)
 	if err != nil {
 		wrapCtxWithError(ctx, err)
@@ -76,6 +86,11 @@ func (h Handler) PostPvzPvzIdCloseLastReception(ctx *gin.Context, pvzID uuid.UUI
 func (h Handler) PostPvzPvzIdDeleteLastProduct(ctx *gin.Context, pvzID uuid.UUID) {
 	log.SetPrefix("http-server.handler.DeleteLastProduct")
 
+	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE)(ctx)
+	if ctx.IsAborted() {
+		return
+	}
+
 	err := h.receptionSrv.DeleteLastProduct(ctx, pvzID)
 	if err != nil {
 		wrapCtxWithError(ctx, err)
@@ -88,6 +103,11 @@ func (h Handler) PostPvzPvzIdDeleteLastProduct(ctx *gin.Context, pvzID uuid.UUID
 // PostReceptiosn creates new reception on pvz.
 func (h Handler) PostReceptions(ctx *gin.Context) {
 	log.SetPrefix("http-server.handler.CreateReception")
+
+	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE)(ctx)
+	if ctx.IsAborted() {
+		return
+	}
 
 	var req request.CreateReception
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -106,6 +126,11 @@ func (h Handler) PostReceptions(ctx *gin.Context) {
 
 func (h Handler) PostProducts(ctx *gin.Context) {
 	log.SetPrefix("http-server.handler.PostProducts")
+
+	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE)(ctx)
+	if ctx.IsAborted() {
+		return
+	}
 
 	var req request.AddProduct
 	if err := ctx.ShouldBindJSON(&req); err != nil {

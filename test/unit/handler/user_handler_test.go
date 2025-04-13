@@ -26,7 +26,7 @@ func TestPostDummyLogin(t *testing.T) {
 
 	service := mocks.NewMockUserService(ctrl)
 
-	handler := handler.NewHandler(nil, nil, service)
+	handler := handler.NewHandler(nil, nil, service, nil)
 	testCases := []struct {
 		name         string
 		req          interface{}
@@ -110,7 +110,7 @@ func TestPostRegister(t *testing.T) {
 
 	service := mocks.NewMockUserService(ctrl)
 
-	handler := handler.NewHandler(nil, nil, service)
+	handler := handler.NewHandler(nil, nil, service, nil)
 	testCases := []struct {
 		name         string
 		req          interface{}
@@ -200,7 +200,7 @@ func TestPostLogin(t *testing.T) {
 
 	service := mocks.NewMockUserService(ctrl)
 
-	handler := handler.NewHandler(nil, nil, service)
+	handler := handler.NewHandler(nil, nil, service, nil)
 	testCases := []struct {
 		name         string
 		req          interface{}
