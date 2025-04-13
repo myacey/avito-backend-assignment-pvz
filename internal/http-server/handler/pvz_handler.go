@@ -42,5 +42,6 @@ func (h Handler) PostPvz(ctx *gin.Context) {
 		wrapCtxWithError(ctx, err)
 		return
 	}
+
 	ctx.JSON(http.StatusCreated, pvz.ToResponse())
 }

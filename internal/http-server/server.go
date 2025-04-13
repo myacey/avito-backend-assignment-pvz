@@ -10,6 +10,7 @@ import (
 	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/auth"
 	jwt_token "github.com/myacey/avito-backend-assignment-pvz/internal/pkg/jwt-token"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/metrics"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 	db "github.com/myacey/avito-backend-assignment-pvz/internal/repository/sqlc"
@@ -29,7 +30,7 @@ func New(cfg config.AppConfig, conn *sql.DB, queries *db.Queries) *App {
 	app := &App{
 		Router: gin.Default(),
 	}
-	app.init(cfg, conn, queries)
+	app.initialize(cfg, conn, queries)
 
 	app.server = web.NewServer(cfg.ServerCfg, app.Router)
 
@@ -44,7 +45,7 @@ func (app *App) Stop(ctx context.Context) error {
 	return app.server.Shutdown(ctx)
 }
 
-func (app *App) init(cfg config.AppConfig, conn *sql.DB, queries *db.Queries) {
+func (app *App) initialize(cfg config.AppConfig, conn *sql.DB, queries *db.Queries) {
 	receptionRepo := repository.NewReceptionRepository(queries)
 	pvzRepo := repository.NewPvzRepository(queries)
 	userRepo := repository.NewUserRepository(queries)
@@ -65,6 +66,8 @@ func (app *App) init(cfg config.AppConfig, conn *sql.DB, queries *db.Queries) {
 		&app.Service.UserService,
 		authSrv,
 	)
+
+	app.Router.Use(metrics.GetMetricsMiddleware())
 
 	swagger, err := openapi.GetSwagger()
 	if err != nil {

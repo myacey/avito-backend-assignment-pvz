@@ -11,6 +11,7 @@ import (
 	"github.com/myacey/avito-backend-assignment-pvz/internal/config"
 	pvzv1 "github.com/myacey/avito-backend-assignment-pvz/internal/grpc/pvz/v1"
 	http_server "github.com/myacey/avito-backend-assignment-pvz/internal/http-server"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/metrics"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 	"google.golang.org/grpc"
 
@@ -49,6 +50,8 @@ func main() {
 			log.Fatal(err)
 		}
 	}()
+
+	metrics.StartMetricsServer()
 
 	if err := app.Start(ctx); err != nil {
 		log.Fatal(err)

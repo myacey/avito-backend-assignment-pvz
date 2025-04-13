@@ -10,8 +10,16 @@ apigen:
 gogen:
 	go generate ./...
 
+unit:
+	go test -v ./...
+
+test:
+	go test -v -tags=integrations -count=1 ./...
+
+.PHONY: test
+
 coverage:
-	@go test -coverprofile=coverage.out ./... && \
+	@go test -coverprofile=coverage.out -tags=integrations ./... && \
 	grep -v -E '/(mocks|sqlc|openapi|pkg)/' coverage.out > filtered.out && \
 	COVERAGE=$$(go tool cover -func=filtered.out | grep total | awk '{print $$3}') && \
 	echo "--------------------------------" && \

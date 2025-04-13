@@ -8,6 +8,7 @@ import (
 
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/metrics"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 )
@@ -47,5 +48,6 @@ func (s *PvzServiceImpl) CreatePvz(ctx context.Context, req *request.CreatePvz) 
 		}
 	}
 
+	metrics.CreatePVZ()
 	return resp, err
 }

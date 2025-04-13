@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/metrics"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 )
@@ -176,6 +177,7 @@ func (s *ReceptionServiceImpl) CreateReception(ctx context.Context, req *request
 	}
 
 	tx.Commit()
+	metrics.CraeteReception()
 	return reception, nil
 }
 
@@ -207,5 +209,6 @@ func (s *ReceptionServiceImpl) AddProductToReception(ctx context.Context, req *r
 	}
 
 	tx.Commit()
+	metrics.AddProduct()
 	return res, nil
 }
