@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/service"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/service/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSearchPvz(t *testing.T) {
@@ -120,7 +121,7 @@ func TestCreatePvz(t *testing.T) {
 				pvzRepo.EXPECT().CreatePvz(gomock.Any(), req).Return(nil, errMock)
 			},
 			expResp: nil,
-			expErr:  apperror.NewInternal("failed to craete repository", errMock),
+			expErr:  apperror.NewInternal("failed to create repository", errMock),
 		},
 	}
 

@@ -10,13 +10,18 @@ import (
 	db "github.com/myacey/avito-backend-assignment-pvz/internal/repository/sqlc"
 )
 
+const (
+	dbDriver               = "postgres"
+	ErrUniqueViolationCode = "23505"
+)
+
 func ConfigurePostgres(cfg config.AppConfig) (*db.Queries, *sql.DB, error) {
 	psqlInfo := fmt.Sprintf(
-		"host=%s port=5432 user=%s password=%s dbname=%s sslmode=disable",
-		cfg.PostgresHost, cfg.PostgresUser, cfg.PostgresPassword, cfg.PostgresDB,
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		cfg.PostgresHost, cfg.PostgresPort, cfg.PostgresUser, cfg.PostgresPassword, cfg.PostgresDB,
 	)
 
-	conn, err := sql.Open("postgres", psqlInfo)
+	conn, err := sql.Open(dbDriver, psqlInfo)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot open postgres conn: %w", err)
 	}

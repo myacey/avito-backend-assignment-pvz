@@ -1,5 +1,9 @@
-server:
+httpserver:
   listen: ":8080"
+
+grpcserver:
+  listen: ":3000"
 
 auth:
   jwt_secret_key: "secret"
+  

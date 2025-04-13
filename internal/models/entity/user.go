@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 )
 

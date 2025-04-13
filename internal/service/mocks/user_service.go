@@ -37,34 +37,34 @@ func (m *MockTokenService) EXPECT() *MockTokenServiceMockRecorder {
 	return m.recorder
 }
 
-// CraeteDummyToken mocks base method.
-func (m *MockTokenService) CraeteDummyToken(role string) (string, error) {
+// CreateDummyToken mocks base method.
+func (m *MockTokenService) CreateDummyToken(role string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CraeteDummyToken", role)
+	ret := m.ctrl.Call(m, "CreateDummyToken", role)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CraeteDummyToken indicates an expected call of CraeteDummyToken.
-func (mr *MockTokenServiceMockRecorder) CraeteDummyToken(role interface{}) *gomock.Call {
+// CreateDummyToken indicates an expected call of CreateDummyToken.
+func (mr *MockTokenServiceMockRecorder) CreateDummyToken(role interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CraeteDummyToken", reflect.TypeOf((*MockTokenService)(nil).CraeteDummyToken), role)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDummyToken", reflect.TypeOf((*MockTokenService)(nil).CreateDummyToken), role)
 }
 
-// CraeteUserToken mocks base method.
-func (m *MockTokenService) CraeteUserToken(id uuid.UUID, role string) (string, error) {
+// CreateUserToken mocks base method.
+func (m *MockTokenService) CreateUserToken(id uuid.UUID, role string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CraeteUserToken", id, role)
+	ret := m.ctrl.Call(m, "CreateUserToken", id, role)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CraeteUserToken indicates an expected call of CraeteUserToken.
-func (mr *MockTokenServiceMockRecorder) CraeteUserToken(id, role interface{}) *gomock.Call {
+// CreateUserToken indicates an expected call of CreateUserToken.
+func (mr *MockTokenServiceMockRecorder) CreateUserToken(id, role interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CraeteUserToken", reflect.TypeOf((*MockTokenService)(nil).CraeteUserToken), id, role)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserToken", reflect.TypeOf((*MockTokenService)(nil).CreateUserToken), id, role)
 }
 
 // VerifyToken mocks base method.

@@ -56,7 +56,7 @@ var createdReceptionCount = promauto.NewCounter(
 	},
 )
 
-func CraeteReception() {
+func CreateReception() {
 	createdReceptionCount.Inc()
 }
 
@@ -98,8 +98,6 @@ func GetMetricsMiddleware() gin.HandlerFunc {
 }
 
 func sanitizePath(p string) string {
-	// можно заменить на regex-парсинг или библиотеку
-	// но пока нормальный хардкод:
 	if strings.HasPrefix(p, "/pvz/") {
 		return "/pvz/:id"
 	}

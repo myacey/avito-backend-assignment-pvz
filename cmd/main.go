@@ -8,14 +8,13 @@ import (
 	"os/signal"
 	"syscall"
 
+	_ "github.com/lib/pq"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/config"
 	pvzv1 "github.com/myacey/avito-backend-assignment-pvz/internal/grpc/pvz/v1"
 	http_server "github.com/myacey/avito-backend-assignment-pvz/internal/http-server"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/metrics"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
-	"google.golang.org/grpc"
-
-	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -33,22 +32,29 @@ func main() {
 	}
 
 	app := http_server.New(cfg, conn, queries)
-	go func() {
-		<-ctx.Done()
-		app.Stop(ctx)
-	}()
 
-	lis, err := net.Listen("tcp", ":3000")
+	// grpcServer := grpc.NewServer()
+	grpcServer, err := pvzv1.New(cfg.GRPCServerCfg)
+	if err != nil {
+		log.Fatalf("failed to create grpc server: %v", err)
+	}
+	pvzv1.RegisterPVZServiceServer(grpcServer, pvzv1.NewPVZServer(&app.Service.PvzService))
+
+	lis, err := net.Listen("tcp", cfg.GRPCServerCfg.Address)
 	if err != nil {
 		log.Fatal(err)
 	}
-	grpcServer := grpc.NewServer()
-	pvzv1.RegisterPVZServiceServer(grpcServer, pvzv1.NewPVZServerGRPC(&app.Service.PvzService))
 	go func() {
-		log.Println("start grpc server on :3000")
+		log.Printf("start grpc server on %s", cfg.GRPCServerCfg.Address)
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatal(err)
 		}
+	}()
+
+	go func() {
+		<-ctx.Done()
+		app.Stop(ctx)
+		grpcServer.GracefulStop()
 	}()
 
 	metrics.StartMetricsServer()

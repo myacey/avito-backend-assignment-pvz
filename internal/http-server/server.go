@@ -6,6 +6,8 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	middleware "github.com/oapi-codegen/gin-middleware"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/config"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/auth"
@@ -16,8 +18,6 @@ import (
 	db "github.com/myacey/avito-backend-assignment-pvz/internal/repository/sqlc"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/service"
 	"github.com/myacey/avito-backend-assignment-pvz/pkg/openapi"
-
-	middleware "github.com/oapi-codegen/gin-middleware"
 )
 
 type App struct {
@@ -32,7 +32,7 @@ func New(cfg config.AppConfig, conn *sql.DB, queries *db.Queries) *App {
 	}
 	app.initialize(cfg, conn, queries)
 
-	app.server = web.NewServer(cfg.ServerCfg, app.Router)
+	app.server = web.NewServer(cfg.HTTPServerCfg, app.Router)
 
 	return app
 }
@@ -77,65 +77,3 @@ func (app *App) initialize(cfg config.AppConfig, conn *sql.DB, queries *db.Queri
 	openapi.RegisterHandlers(app.Router, hndlr)
 	app.Router.Use(middleware.OapiRequestValidator(swagger))
 }
-
-// func (app *App) initRoutes() {
-// 	app.router = gin.Default()
-
-// 	app.router.POST("/dummyLogin", mappedHandler[handler.UserService](&app.service.UserService, app.handler.DummyLogin))
-// 	app.router.POST("/login", mappedHandler[handler.UserService](&app.service.UserService, app.handler.Login))
-// 	app.router.POST("/register", mappedHandler[handler.UserService](&app.service.UserService, app.handler.Register))
-
-// 	authorizedOnly := app.router.Group("/")
-// 	authorizedOnly.Use(app.authService.AuthMiddleware(
-// 		entity.ROLE_EMPLOYEE,
-// 		entity.ROLE_MODERATOR,
-// 	))
-// 	{
-// 		authorizedOnly.GET("/pvz", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, app.handler.SearchReceptions))
-// 	}
-// 	// app.router.GET("/pvz", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, app.handler.SearchReceptions))
-
-// 	employeeOnly := app.router.Group("/")
-// 	employeeOnly.Use(app.authService.AuthMiddleware(entity.ROLE_EMPLOYEE))
-// 	{
-// 		employeeOnly.POST("/pvz/:pvzid/close_last_reception", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, app.handler.FinishReception))
-// 		employeeOnly.POST("/pvz/:pvzid/delete_last_product", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, app.handler.DeleteLastProduct))
-// 		employeeOnly.POST("/receptions", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, app.handler.CreateReception))
-// 		employeeOnly.POST("/products", mappedHandler[handler.ReceptionService](&app.service.ReceptionService, app.handler.AddProductToReception))
-// 	}
-
-// 	moderatorOnly := app.router.Group("/")
-// 	moderatorOnly.Use(app.authService.AuthMiddleware(entity.ROLE_MODERATOR))
-// 	{
-// 		moderatorOnly.POST("/pvz", mappedHandler[handler.PvzService](&app.service.PvzService, app.handler.CreatePvz))
-// 	}
-
-// 	// apiHandler := api_impl.NewAPIHandlerWithFuncs(app.service)
-// 	// openapi.RegisterHandlers(app.router, apiHandler)
-// }
-
-// func mappedHandler[S any](service S, handler func(*gin.Context, S) error) gin.HandlerFunc {
-// 	return func(ctx *gin.Context) {
-// 		if err := handler(ctx, service); err != nil {
-// 			if httpError, ok := err.(apperror.HTTPError); ok {
-// 				ctx.JSON(httpError.Code, response.Error{
-// 					Code:      httpError.Code,
-// 					Message:   httpError.Error(),
-// 					RequestId: ctx.GetHeader("X-Request-Id"),
-// 				})
-
-// 				if httpError.Code == http.StatusInternalServerError {
-// 					log.Printf("internal error: %v | %v", httpError.Message, httpError.DebugError)
-// 				}
-// 			} else {
-// 				ctx.JSON(http.StatusInternalServerError, response.Error{
-// 					Code:      http.StatusInternalServerError,
-// 					Message:   err.Error(),
-// 					RequestId: ctx.GetHeader("X-Request-Id"),
-// 				})
-// 			}
-// 			ctx.Set("Retry-After", 10)
-// 			ctx.Abort()
-// 		}
-// 	}
-// }

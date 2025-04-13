@@ -25,6 +25,7 @@ type ReceptionService interface {
 	AddProductToReception(context.Context, *request.AddProduct) (*entity.Product, error)
 }
 
+// GetPvz returns PVZ with receptions by page-limit and startDate-endDate.
 func (h Handler) GetPvz(ctx *gin.Context, params openapi.GetPvzParams) {
 	log.SetPrefix("http-server.handler.SearchPvz")
 
@@ -124,6 +125,7 @@ func (h Handler) PostReceptions(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, reception.ToResponse())
 }
 
+// PostProducts adds product to last receptions.
 func (h Handler) PostProducts(ctx *gin.Context) {
 	log.SetPrefix("http-server.handler.PostProducts")
 

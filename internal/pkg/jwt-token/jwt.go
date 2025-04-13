@@ -9,6 +9,12 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	JwtClaimID   = "uuid"
+	JwtClaimRole = "role"
+	JwtClaimExp  = "exp"
+)
+
 type TokenServiceConfig struct {
 	SecretKey string `mapstructure:"jwt_secret_key"`
 }
@@ -21,10 +27,10 @@ func New(cfg TokenServiceConfig) *JWTTokenService {
 	return &JWTTokenService{[]byte(cfg.SecretKey)}
 }
 
-func (s *JWTTokenService) CraeteDummyToken(role string) (string, error) {
+func (s *JWTTokenService) CreateDummyToken(role string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"role": role,
-		"exp":  time.Now().Add(time.Hour * 24).Unix(),
+		JwtClaimRole: role,
+		JwtClaimExp:  time.Now().Add(time.Hour * 24).Unix(),
 	})
 	tokenStr, err := token.SignedString(s.secretKey)
 	if err != nil {
@@ -34,11 +40,11 @@ func (s *JWTTokenService) CraeteDummyToken(role string) (string, error) {
 	return tokenStr, nil
 }
 
-func (s *JWTTokenService) CraeteUserToken(id uuid.UUID, role string) (string, error) {
+func (s *JWTTokenService) CreateUserToken(id uuid.UUID, role string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"uuid": id.String(),
-		"role": role,
-		"exp":  time.Now().Add(time.Hour * 24).Unix(),
+		JwtClaimID:   id.String(),
+		JwtClaimRole: role,
+		JwtClaimExp:  time.Now().Add(time.Hour * 24).Unix(),
 	})
 	tokenStr, err := token.SignedString(s.secretKey)
 	if err != nil {

@@ -8,12 +8,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/lib/pq"
+	"github.com/stretchr/testify/require"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository/mocks"
 	db "github.com/myacey/avito-backend-assignment-pvz/internal/repository/sqlc"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSearchPvz(t *testing.T) {

@@ -8,6 +8,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/metrics"
@@ -145,7 +146,7 @@ func (s *ReceptionServiceImpl) DeleteLastProduct(ctx context.Context, pvzID uuid
 func (s *ReceptionServiceImpl) CreateReception(ctx context.Context, req *request.CreateReception) (*entity.Reception, error) {
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, apperror.NewInternal("failed to craete reception", err)
+		return nil, apperror.NewInternal("failed to create reception", err)
 	}
 	defer tx.Rollback()
 
@@ -177,7 +178,7 @@ func (s *ReceptionServiceImpl) CreateReception(ctx context.Context, req *request
 	}
 
 	tx.Commit()
-	metrics.CraeteReception()
+	metrics.CreateReception()
 	return reception, nil
 }
 
