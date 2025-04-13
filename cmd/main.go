@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/myacey/avito-backend-assignment-pvz/internal/config"
+	pvzv1 "github.com/myacey/avito-backend-assignment-pvz/internal/grpc/pvz/v1"
 	http_server "github.com/myacey/avito-backend-assignment-pvz/internal/http-server"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/auth"
@@ -16,6 +18,7 @@ import (
 	"github.com/myacey/avito-backend-assignment-pvz/internal/service"
 	"github.com/myacey/avito-backend-assignment-pvz/pkg/openapi"
 	middleware "github.com/oapi-codegen/gin-middleware"
+	"google.golang.org/grpc"
 
 	_ "github.com/lib/pq"
 )
@@ -61,6 +64,20 @@ func main() {
 	go func() {
 		<-ctx.Done()
 		app.Stop(ctx)
+	}()
+
+	lis, err := net.Listen("tcp", ":3000")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	grpcServer := grpc.NewServer()
+	pvzv1.RegisterPVZServiceServer(grpcServer, pvzv1.NewPVZServerGRPC(&pvzSrv))
+	go func() {
+		log.Println("start grpc server on :3000")
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatal(err)
+		}
 	}()
 
 	if err := app.Start(ctx); err != nil {
