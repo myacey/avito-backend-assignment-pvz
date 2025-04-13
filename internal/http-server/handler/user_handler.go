@@ -1,3 +1,5 @@
+//go:generate mockgen -source=./user_handler.go -destination=./mocks/user_handler.go -package=mocks
+
 package handler
 
 import (

@@ -1,3 +1,5 @@
+//go:generate mockgen -source=./pvz_handler.go -destination=./mocks/pvz_handler.go -package=mocks
+
 package handler
 
 import (
@@ -32,6 +34,7 @@ func (h Handler) PostPvz(ctx *gin.Context) {
 	pvz, err := h.pvzSrv.CreatePvz(ctx, &req)
 	if err != nil {
 		wrapCtxWithError(ctx, err)
+		return
 	}
 	ctx.JSON(http.StatusCreated, pvz.ToResponse())
 }

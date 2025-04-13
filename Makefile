@@ -12,10 +12,11 @@ gogen:
 
 coverage:
 	@go test -coverprofile=coverage.out ./... && \
-	COVERAGE=$$(go tool cover -func=coverage.out | grep total | awk '{print $$3}') && \
+	grep -v -E '/(mocks|sqlc|openapi|pkg)/' coverage.out > filtered.out && \
+	COVERAGE=$$(go tool cover -func=filtered.out | grep total | awk '{print $$3}') && \
 	echo "--------------------------------" && \
 	echo "Coverage: $${COVERAGE}" && \
-	rm coverage.out
+	rm coverage.out filtered.out
 
 all: sqlc apigen gogen
 	docker compose up -d
