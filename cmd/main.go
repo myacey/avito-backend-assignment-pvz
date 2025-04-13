@@ -32,7 +32,6 @@ func main() {
 	}
 
 	app := http_server.New(cfg, conn, queries)
-
 	go func() {
 		<-ctx.Done()
 		app.Stop(ctx)
@@ -42,7 +41,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	grpcServer := grpc.NewServer()
 	pvzv1.RegisterPVZServiceServer(grpcServer, pvzv1.NewPVZServerGRPC(&app.Service.PvzService))
 	go func() {

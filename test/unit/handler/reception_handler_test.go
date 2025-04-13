@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	reception = &entity.Reception{ID: uuid.New(), DateTime: time.Date(2022, 12, 12, 12, 12, 0, 0, time.Local), PvzID: pvz.ID, Status: entity.STATUS_IN_PROGRESS}
+	reception = &entity.Reception{ID: uuid.New(), DateTime: time.Date(2022, 12, 12, 12, 12, 0, 0, time.UTC), PvzID: pvz.ID, Status: entity.STATUS_IN_PROGRESS}
 	product   = &entity.Product{ID: uuid.New(), DateTime: reception.DateTime, Type: entity.PRODUCT_TYPE_CLOTHES, ReceptionID: reception.ID}
 
 	start = time.Now().AddDate(0, 0, -2)

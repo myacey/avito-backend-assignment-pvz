@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	pvz     = &entity.Pvz{ID: uuid.New(), RegistrationDate: time.Date(2025, 12, 12, 12, 12, 12, 0, time.Local), City: entity.CITY_MOSCOW}
+	pvz     = &entity.Pvz{ID: uuid.New(), RegistrationDate: time.Date(2025, 12, 12, 12, 12, 12, 0, time.UTC), City: entity.CITY_MOSCOW}
 	errMock = errors.New("mock error")
 )
 
