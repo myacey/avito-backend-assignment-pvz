@@ -68,7 +68,6 @@ func (s *ReceptionServiceImpl) SearchReceptions(ctx context.Context, req *reques
 
 	res := make([]*entity.PvzWithReception, 0, len(pvzs))
 	for _, pvz := range pvzs {
-
 		pw := &entity.PvzWithReception{
 			Pvz:        pvz,
 			Receptions: receptionBYPvz[pvz.ID],
@@ -110,7 +109,7 @@ func (s *ReceptionServiceImpl) DeleteLastProduct(ctx context.Context, pvzID uuid
 		}
 	}
 
-	if openReception.Status == entity.STATUS_FINISHED { // smt went really wrong
+	if openReception.Status == entity.StatusFinished { // smt went really wrong
 		return apperror.NewInternal(
 			"failed to find open reception",
 			errors.New(
@@ -158,7 +157,7 @@ func (s *ReceptionServiceImpl) CreateReception(ctx context.Context, req *request
 		return nil, apperror.NewBadReq("can't start new reception, already in-progress: " + openReception.ID.String())
 	}
 
-	if openReception != nil && openReception.Status == entity.STATUS_IN_PROGRESS { // smt went really wrong
+	if openReception != nil && openReception.Status == entity.StatusInProgress { // smt went really wrong
 		return nil, apperror.NewInternal(
 			"failed to find open reception",
 			errors.New(

@@ -14,13 +14,13 @@ import (
 type Status string
 
 const (
-	STATUS_IN_PROGRESS Status = "in_progress"
-	STATUS_FINISHED    Status = "finished"
+	StatusInProgress Status = "in_progress"
+	StatusFinished   Status = "finished"
 )
 
-var Statuses map[Status]bool = map[Status]bool{
-	STATUS_IN_PROGRESS: true,
-	STATUS_FINISHED:    true,
+var Statuses = map[Status]bool{
+	StatusInProgress: true,
+	StatusFinished:   true,
 }
 
 func (r Status) Value() (driver.Value, error) {
@@ -35,9 +35,9 @@ func (r *Status) Scan(value interface{}) error {
 type ProductType string
 
 const (
-	PRODUCT_TYPE_ELECTRONICS ProductType = "электроника"
-	PRODUCT_TYPE_CLOTHES     ProductType = "одежда"
-	PRODUCT_TYPE_SHOES       ProductType = "обувь"
+	ProductTypeElectronics ProductType = "электроника"
+	ProductTypeClothes     ProductType = "одежда"
+	ProductTypeShoes       ProductType = "обувь"
 )
 
 func (c *ProductType) Scan(src interface{}) error {
@@ -56,10 +56,10 @@ func (c ProductType) Value() (driver.Value, error) {
 	return string(c), nil
 }
 
-var ProductTypes map[ProductType]bool = map[ProductType]bool{
-	PRODUCT_TYPE_ELECTRONICS: true,
-	PRODUCT_TYPE_CLOTHES:     true,
-	PRODUCT_TYPE_SHOES:       true,
+var ProductTypes = map[ProductType]bool{
+	ProductTypeElectronics: true,
+	ProductTypeClothes:     true,
+	ProductTypeShoes:       true,
 }
 
 type Reception struct {

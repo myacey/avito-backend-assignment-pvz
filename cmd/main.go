@@ -12,7 +12,7 @@ import (
 
 	"github.com/myacey/avito-backend-assignment-pvz/internal/config"
 	pvzv1 "github.com/myacey/avito-backend-assignment-pvz/internal/grpc/pvz/v1"
-	http_server "github.com/myacey/avito-backend-assignment-pvz/internal/http-server"
+	http_server "github.com/myacey/avito-backend-assignment-pvz/internal/httpserver"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/metrics"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 )

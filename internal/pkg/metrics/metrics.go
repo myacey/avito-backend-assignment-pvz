@@ -1,9 +1,9 @@
 package metrics
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -34,7 +34,7 @@ var responseTime = promauto.NewHistogramVec(
 	[]string{"handler", "method"},
 )
 
-// Buisness Metrics
+// Business Metrics
 
 // createPVZCount - counter of created PVZs.
 var createPvzCount = promauto.NewCounter(
@@ -108,5 +108,5 @@ func sanitizePath(p string) string {
 }
 
 func getStatusCode(code int) string {
-	return fmt.Sprintf("%d", code)
+	return strconv.Itoa(code)
 }

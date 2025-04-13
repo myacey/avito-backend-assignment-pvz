@@ -17,7 +17,7 @@ message PVZ {
 }
 
 enum ReceptionStatus {
-  RECEPTION_STATUS_IN_PROGRESS = 0;
+  RECEPTION_StatusInProgress = 0;
   RECEPTION_STATUS_CLOSED = 1;
 }
 

@@ -7,10 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/httpserver/handler"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
-	jwt_token "github.com/myacey/avito-backend-assignment-pvz/internal/pkg/jwt-token"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/jwttoken"
 )
 
 const (
@@ -23,12 +23,12 @@ type TokenChecker interface {
 	VerifyToken(token string) (map[string]interface{}, error)
 }
 
-type AuthService struct {
+type Service struct {
 	tokenSrv TokenChecker
 }
 
-func New(tokenSrv TokenChecker) *AuthService {
-	return &AuthService{
+func New(tokenSrv TokenChecker) *Service {
+	return &Service{
 		tokenSrv: tokenSrv,
 	}
 }
@@ -45,14 +45,14 @@ func getToken(ctx *gin.Context) (string, error) {
 	return tokenStr, nil
 }
 
-func (s *AuthService) AuthMiddleware(neededRole ...entity.Role) gin.HandlerFunc {
+func (s *Service) AuthMiddleware(neededRole ...entity.Role) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token, err := getToken(ctx)
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
 				Code:      http.StatusUnauthorized,
 				Message:   err.Error(),
-				RequestId: ctx.GetHeader(handler.HeaderRequestID),
+				RequestID: ctx.GetHeader(handler.HeaderRequestID),
 			})
 			return
 		}
@@ -62,17 +62,17 @@ func (s *AuthService) AuthMiddleware(neededRole ...entity.Role) gin.HandlerFunc 
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
 				Code:      http.StatusUnauthorized,
 				Message:   err.Error(),
-				RequestId: ctx.GetHeader(handler.HeaderRequestID),
+				RequestID: ctx.GetHeader(handler.HeaderRequestID),
 			})
 			return
 		}
 
-		r, ok := claims[jwt_token.JwtClaimRole]
+		r, ok := claims[jwttoken.JwtClaimRole]
 		if !ok {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
 				Code:      http.StatusUnauthorized,
 				Message:   "invalid role",
-				RequestId: ctx.GetHeader(handler.HeaderRequestID),
+				RequestID: ctx.GetHeader(handler.HeaderRequestID),
 			})
 		}
 
@@ -81,7 +81,7 @@ func (s *AuthService) AuthMiddleware(neededRole ...entity.Role) gin.HandlerFunc 
 				continue
 			}
 
-			ctx.Set(CtxKeyUserType, claims[jwt_token.JwtClaimRole])
+			ctx.Set(CtxKeyUserType, claims[jwttoken.JwtClaimRole])
 			ctx.Next()
 			return
 		}
@@ -89,7 +89,7 @@ func (s *AuthService) AuthMiddleware(neededRole ...entity.Role) gin.HandlerFunc 
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
 			Code:      http.StatusUnauthorized,
 			Message:   "invalid role",
-			RequestId: ctx.GetHeader(handler.HeaderRequestID),
+			RequestID: ctx.GetHeader(handler.HeaderRequestID),
 		})
 	}
 }

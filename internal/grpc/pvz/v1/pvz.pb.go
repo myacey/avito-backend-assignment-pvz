@@ -25,18 +25,18 @@ const (
 type ReceptionStatus int32
 
 const (
-	ReceptionStatus_RECEPTION_STATUS_IN_PROGRESS ReceptionStatus = 0
+	ReceptionStatus_RECEPTION_StatusInProgress ReceptionStatus = 0
 	ReceptionStatus_RECEPTION_STATUS_CLOSED      ReceptionStatus = 1
 )
 
 // Enum value maps for ReceptionStatus.
 var (
 	ReceptionStatus_name = map[int32]string{
-		0: "RECEPTION_STATUS_IN_PROGRESS",
+		0: "RECEPTION_StatusInProgress",
 		1: "RECEPTION_STATUS_CLOSED",
 	}
 	ReceptionStatus_value = map[string]int32{
-		"RECEPTION_STATUS_IN_PROGRESS": 0,
+		"RECEPTION_StatusInProgress": 0,
 		"RECEPTION_STATUS_CLOSED":      1,
 	}
 )
@@ -221,7 +221,7 @@ const file_pvz_proto_rawDesc = "" +
 	"\x12GetPVZListResponse\x12\x1f\n" +
 	"\x04pvzs\x18\x01 \x03(\v2\v.pvz.v1.PVZR\x04pvzs*P\n" +
 	"\x0fReceptionStatus\x12 \n" +
-	"\x1cRECEPTION_STATUS_IN_PROGRESS\x10\x00\x12\x1b\n" +
+	"\x1cRECEPTION_StatusInProgress\x10\x00\x12\x1b\n" +
 	"\x17RECEPTION_STATUS_CLOSED\x10\x012Q\n" +
 	"\n" +
 	"PVZService\x12C\n" +

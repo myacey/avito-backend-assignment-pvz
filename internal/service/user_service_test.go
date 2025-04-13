@@ -21,7 +21,7 @@ import (
 var (
 	tokenValid              = "valid"
 	errMock    error        = errors.New("mock error")
-	mockUser   *entity.User = &entity.User{ID: uuid.New(), Email: "mock@example.com", Password: "string", Role: entity.ROLE_EMPLOYEE}
+	mockUser   *entity.User = &entity.User{ID: uuid.New(), Email: "mock@example.com", Password: "string", Role: entity.RoleEmployee}
 )
 
 func TestDummyLogin(t *testing.T) {
@@ -39,7 +39,7 @@ func TestDummyLogin(t *testing.T) {
 		{
 			name: "OK",
 			req: &request.DummyLogin{
-				Role: string(entity.ROLE_EMPLOYEE),
+				Role: string(entity.RoleEmployee),
 			},
 			mockBehavior: func(req *request.DummyLogin) {
 				tokenSrv.EXPECT().CreateDummyToken(req.Role).Return(tokenValid, nil)
@@ -50,7 +50,7 @@ func TestDummyLogin(t *testing.T) {
 		{
 			name: "create dummy token err",
 			req: &request.DummyLogin{
-				Role: string(entity.ROLE_EMPLOYEE),
+				Role: string(entity.RoleEmployee),
 			},
 			mockBehavior: func(req *request.DummyLogin) {
 				tokenSrv.EXPECT().CreateDummyToken(req.Role).Return("", errMock)

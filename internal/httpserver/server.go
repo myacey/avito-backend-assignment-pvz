@@ -1,4 +1,4 @@
-package http_server
+package httpserver
 
 import (
 	"context"
@@ -9,9 +9,9 @@ import (
 	middleware "github.com/oapi-codegen/gin-middleware"
 
 	"github.com/myacey/avito-backend-assignment-pvz/internal/config"
-	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/httpserver/handler"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/auth"
-	jwt_token "github.com/myacey/avito-backend-assignment-pvz/internal/pkg/jwt-token"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/jwttoken"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/metrics"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
@@ -50,7 +50,7 @@ func (app *App) initialize(cfg config.AppConfig, conn *sql.DB, queries *db.Queri
 	pvzRepo := repository.NewPvzRepository(queries)
 	userRepo := repository.NewUserRepository(queries)
 
-	tokenSrv := jwt_token.New(cfg.TokenService)
+	tokenSrv := jwttoken.New(cfg.TokenService)
 	authSrv := auth.New(tokenSrv)
 
 	pvzSrv := *service.NewPvzService(pvzRepo)
