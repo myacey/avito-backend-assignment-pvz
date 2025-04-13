@@ -29,8 +29,6 @@ var (
 	reception2 *entity.Reception = &entity.Reception{ID: uuid.New(), DateTime: time.Now().AddDate(0, 0, -1), PvzID: pvz2.ID, Status: entity.STATUS_FINISHED}
 	reception3 *entity.Reception = &entity.Reception{ID: uuid.New(), DateTime: time.Now().AddDate(0, 0, 0), PvzID: pvz3.ID, Status: entity.STATUS_IN_PROGRESS}
 
-	receptions []*entity.Reception = []*entity.Reception{reception1, reception2, reception3}
-
 	product *entity.Product = &entity.Product{ID: uuid.New(), DateTime: time.Now(), Type: entity.PRODUCT_TYPE_CLOTHES, ReceptionID: reception3.ID}
 )
 

@@ -1,3 +1,5 @@
+//go:generate mockgen -source=./pvz_repository.go -destination=mocks/pvz_repository.go -package=mocks
+
 package repository
 
 import (
@@ -12,11 +14,16 @@ import (
 
 var ErrPvzAlreadyExists = errors.New("pvz already exists")
 
-type PvzRepository struct {
-	queries *db.Queries
+type PvzQueries interface {
+	SearchPVZ(ctx context.Context, arg db.SearchPVZParams) ([]db.Pvz, error)
+	CreatePVZ(ctx context.Context, arg db.CreatePVZParams) (db.Pvz, error)
 }
 
-func NewPvzRepository(q *db.Queries) *PvzRepository {
+type PvzRepository struct {
+	queries PvzQueries
+}
+
+func NewPvzRepository(q PvzQueries) *PvzRepository {
 	return &PvzRepository{q}
 }
 

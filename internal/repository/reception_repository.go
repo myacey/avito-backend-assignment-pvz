@@ -1,3 +1,5 @@
+//go:generate mockgen -source=./reception_repository.go -destination=mocks/reception_repository.go -package=mocks
+
 package repository
 
 import (
@@ -24,11 +26,21 @@ const (
 	errAddReceptionToFinishedReception = "20002"
 )
 
-type ReceptionRepository struct {
-	queries *db.Queries
+type ReceptionQueries interface {
+	GetOpenReceptionByPvzID(ctx context.Context, pvzID uuid.UUID) (db.Reception, error)
+	CreateReception(ctx context.Context, arg db.CreateReceptionParams) (db.Reception, error)
+	AddProductToReception(ctx context.Context, arg db.AddProductToReceptionParams) (db.Product, error)
+	SearchReceptionsByPvzsAndTime(ctx context.Context, arg db.SearchReceptionsByPvzsAndTimeParams) ([]db.Reception, error)
+	FinishReception(ctx context.Context, pvzID uuid.UUID) (db.Reception, error)
+	GetLastProductInReception(ctx context.Context, receptionID uuid.UUID) (db.Product, error)
+	DeleteProduct(ctx context.Context, id uuid.UUID) error
 }
 
-func NewReceptionRepository(q *db.Queries) *ReceptionRepository {
+type ReceptionRepository struct {
+	queries ReceptionQueries
+}
+
+func NewReceptionRepository(q ReceptionQueries) *ReceptionRepository {
 	return &ReceptionRepository{q}
 }
 
