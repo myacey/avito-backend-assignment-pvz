@@ -13,8 +13,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
-	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler/mocks"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/httpserver/handler"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/httpserver/handler/mocks"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
