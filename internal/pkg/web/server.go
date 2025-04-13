@@ -47,7 +47,7 @@ func NewServer(cfg ServerConfig, handler *gin.Engine) *BaseServer {
 	// server tweaks
 	s.httpServer = &http.Server{
 		Addr:              cfg.Listen,
-		Handler:           s.engine.Handler(),
+		Handler:           s.engine,
 		ReadTimeout:       cfg.ReadTimeout,
 		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
 		WriteTimeout:      cfg.WriteTimeout,
@@ -65,19 +65,7 @@ func (s *BaseServer) Ready() bool {
 	return atomic.LoadInt32(&s.isNotReady) == 0
 }
 
-func (s *BaseServer) getPing(ctx *gin.Context) {
-	if s.Ready() {
-		_, _ = ctx.Writer.Write([]byte("pong"))
-		return
-	}
-
-	http.Error(ctx.Writer, "server cannot accept requests", http.StatusTeapot)
-}
-
 func (s *BaseServer) Run(ctx context.Context) error {
-	s.Router().GET("/live", func(_ *gin.Context) {})
-	s.Router().GET("/ping", s.getPing)
-
 	go func() {
 		for {
 			<-ctx.Done()

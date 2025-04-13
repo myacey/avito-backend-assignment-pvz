@@ -1,3 +1,5 @@
+//go:generate mockgen -source=./user_repository.go -destination=mocks/user_repository.go -package=mocks
+
 package repository
 
 import (
@@ -16,11 +18,16 @@ var (
 	ErrUserNotFound      = errors.New("user not found")
 )
 
-type UserRepository struct {
-	queries *db.Queries
+type UserQueries interface {
+	CreateUser(ctx context.Context, arg db.CreateUserParams) (db.User, error)
+	GetUserByEmail(ctx context.Context, email string) (db.User, error)
 }
 
-func NewUserRepository(q *db.Queries) *UserRepository {
+type UserRepository struct {
+	queries UserQueries
+}
+
+func NewUserRepository(q UserQueries) *UserRepository {
 	return &UserRepository{q}
 }
 

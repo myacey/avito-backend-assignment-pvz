@@ -1,18 +1,20 @@
+//go:generate mockgen -source=./reception_handler.go -destination=./mocks/reception_handler.go -package=mocks
+
 package handler
 
 import (
 	"context"
 	"log"
 	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
+	"github.com/myacey/avito-backend-assignment-pvz/pkg/openapi"
 )
 
 type ReceptionService interface {
@@ -23,43 +25,23 @@ type ReceptionService interface {
 	AddProductToReception(context.Context, *request.AddProduct) (*entity.Product, error)
 }
 
-func SearchReceptions(ctx *gin.Context, sevice ReceptionService) error {
+func (h Handler) GetPvz(ctx *gin.Context, params openapi.GetPvzParams) {
 	log.SetPrefix("http-server.handler.SearchPvz")
 
-	startDateStr := ctx.Query("startDate")
-	if startDateStr == "" {
-		return apperror.NewBadReq("start date can't be nil")
-	}
-	startDate, err := time.Parse(time.RFC3339, startDateStr)
-	if err != nil {
-		return apperror.NewBadReq("invalid start date: " + startDateStr)
+	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE, entity.ROLE_MODERATOR)(ctx)
+	if ctx.IsAborted() {
+		return
 	}
 
-	endDateStr := ctx.Query("endDate")
-	if endDateStr == "" {
-		return apperror.NewBadReq("end date can't be nil")
-	}
-	endDate, err := time.Parse(time.RFC3339, endDateStr)
-	if err != nil {
-		return apperror.NewBadReq("invalid end date: " + endDateStr)
-	}
+	startDate := *params.StartDate
+	endDate := *params.EndDate
 
-	page := 1
-	pageStr := ctx.Query("page")
-	if pageStr != "" {
-		page, err = strconv.Atoi(pageStr)
-		if err != nil || page < 1 {
-			return apperror.NewBadReq("invalid page: " + pageStr)
-		}
+	page, limit := 1, 10
+	if params.Page != nil {
+		page = *params.Page
 	}
-
-	limit := 10
-	limitStr := ctx.Query("limit")
-	if limitStr != "" {
-		limit, err = strconv.Atoi(limitStr)
-		if err != nil || limit < 1 {
-			return apperror.NewBadReq("invalid limit: " + limitStr)
-		}
+	if params.Limit != nil {
+		limit = *params.Limit
 	}
 
 	req := &request.SearchPvz{
@@ -69,9 +51,10 @@ func SearchReceptions(ctx *gin.Context, sevice ReceptionService) error {
 		Limit:     limit,
 	}
 
-	pvzWithReceptions, err := sevice.SearchReceptions(ctx, req) // TODO: gen responses
+	pvzWithReceptions, err := h.receptionSrv.SearchReceptions(ctx, req)
 	if err != nil {
-		return err
+		wrapCtxWithError(ctx, err)
+		return
 	}
 	resp := make([]*response.PvzWithReception, len(pvzWithReceptions))
 	for i, v := range pvzWithReceptions {
@@ -79,77 +62,92 @@ func SearchReceptions(ctx *gin.Context, sevice ReceptionService) error {
 	}
 
 	ctx.JSON(http.StatusOK, resp)
-	return nil
 }
 
-func FinishReception(ctx *gin.Context, service ReceptionService) error {
+// PostPvzPvzIdCloseLastReception ends reception
+func (h Handler) PostPvzPvzIdCloseLastReception(ctx *gin.Context, pvzID uuid.UUID) {
 	log.SetPrefix("http-server.handler.CloseLastReception")
 
-	pvzID, err := uuid.Parse(ctx.Param("pvzid"))
-	if err != nil {
-		return apperror.NewBadReq("invalid pvz id")
+	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE)(ctx)
+	if ctx.IsAborted() {
+		return
 	}
 
-	reception, err := service.FinishReception(ctx, pvzID)
+	reception, err := h.receptionSrv.FinishReception(ctx, pvzID)
 	if err != nil {
-		return err
+		wrapCtxWithError(ctx, err)
+		return
 	}
 
 	ctx.JSON(http.StatusOK, reception.ToResponse())
-	return nil
 }
 
-func DeleteLastProduct(ctx *gin.Context, service ReceptionService) error {
+// PostPvzPvzIdDeleteLastProduct deletes last product in reception
+func (h Handler) PostPvzPvzIdDeleteLastProduct(ctx *gin.Context, pvzID uuid.UUID) {
 	log.SetPrefix("http-server.handler.DeleteLastProduct")
 
-	pvzID, err := uuid.Parse(ctx.Param("pvzid"))
-	if err != nil {
-		return apperror.NewBadReq("invalid pvz id")
+	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE)(ctx)
+	if ctx.IsAborted() {
+		return
 	}
 
-	err = service.DeleteLastProduct(ctx, pvzID)
+	err := h.receptionSrv.DeleteLastProduct(ctx, pvzID)
 	if err != nil {
-		return err
+		wrapCtxWithError(ctx, err)
+		return
 	}
 
 	ctx.Status(http.StatusOK)
-	return nil
 }
 
-func CreateReception(ctx *gin.Context, service ReceptionService) error {
+// PostReceptiosn creates new reception on pvz.
+func (h Handler) PostReceptions(ctx *gin.Context) {
 	log.SetPrefix("http-server.handler.CreateReception")
+
+	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE)(ctx)
+	if ctx.IsAborted() {
+		return
+	}
 
 	var req request.CreateReception
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		return apperror.NewBadReq("invalid req: " + err.Error())
+		wrapCtxWithError(ctx, apperror.NewBadReq("invalid req: "+err.Error()))
+		return
 	}
 
-	reception, err := service.CreateReception(ctx, &req)
+	reception, err := h.receptionSrv.CreateReception(ctx, &req)
 	if err != nil {
-		return err
+		wrapCtxWithError(ctx, err)
+		return
 	}
 
 	ctx.JSON(http.StatusCreated, reception.ToResponse())
-	return nil
 }
 
-func AddProductToReception(ctx *gin.Context, service ReceptionService) error {
-	log.SetPrefix("http-server.handler.AddProductToReception")
+func (h Handler) PostProducts(ctx *gin.Context) {
+	log.SetPrefix("http-server.handler.PostProducts")
+
+	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE)(ctx)
+	if ctx.IsAborted() {
+		return
+	}
 
 	var req request.AddProduct
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		return apperror.NewBadReq("invalid req: " + err.Error())
+		wrapCtxWithError(ctx, apperror.NewBadReq("invalid req: "+err.Error()))
+		return
 	}
 
 	if _, ok := entity.ProductTypes[entity.ProductType(req.Type)]; !ok {
-		return apperror.NewBadReq("invalid product type: " + req.Type)
+		wrapCtxWithError(ctx, apperror.NewBadReq("invalid product type: "+req.Type))
+		return
 	}
 
-	product, err := service.AddProductToReception(ctx, &req)
+	product, err := h.receptionSrv.AddProductToReception(ctx, &req)
 	if err != nil {
-		return err
+		wrapCtxWithError(ctx, err)
+		return
 	}
 
 	ctx.JSON(http.StatusCreated, product.ToResponse())
-	return nil
 }

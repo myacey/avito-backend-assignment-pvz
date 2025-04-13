@@ -4,12 +4,23 @@
 package openapi
 
 import (
+	"bytes"
+	"compress/gzip"
+	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"path"
+	"strings"
 	"time"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gin-gonic/gin"
+	uuid "github.com/google/uuid"
 	"github.com/oapi-codegen/runtime"
+	strictgin "github.com/oapi-codegen/runtime/strictmiddleware/gin"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -69,9 +80,9 @@ type Error struct {
 
 // PVZ defines model for PVZ.
 type PVZ struct {
-	City             PVZCity             `json:"city"`
-	Id               *openapi_types.UUID `json:"id,omitempty"`
-	RegistrationDate *time.Time          `json:"registrationDate,omitempty"`
+	City             PVZCity    `json:"city"`
+	Id               *uuid.UUID `json:"id,omitempty"`
+	RegistrationDate *time.Time `json:"registrationDate,omitempty"`
 }
 
 // PVZCity defines model for PVZ.City.
@@ -79,10 +90,10 @@ type PVZCity string
 
 // Product defines model for Product.
 type Product struct {
-	DateTime    *time.Time          `json:"dateTime,omitempty"`
-	Id          *openapi_types.UUID `json:"id,omitempty"`
-	ReceptionId openapi_types.UUID  `json:"receptionId"`
-	Type        ProductType         `json:"type"`
+	DateTime    *time.Time  `json:"dateTime,omitempty"`
+	Id          *uuid.UUID  `json:"id,omitempty"`
+	ReceptionId uuid.UUID   `json:"receptionId"`
+	Type        ProductType `json:"type"`
 }
 
 // ProductType defines model for Product.Type.
@@ -90,10 +101,10 @@ type ProductType string
 
 // Reception defines model for Reception.
 type Reception struct {
-	DateTime time.Time           `json:"dateTime"`
-	Id       *openapi_types.UUID `json:"id,omitempty"`
-	PvzId    openapi_types.UUID  `json:"pvzId"`
-	Status   ReceptionStatus     `json:"status"`
+	DateTime time.Time       `json:"dateTime"`
+	Id       *uuid.UUID      `json:"id,omitempty"`
+	PvzId    uuid.UUID       `json:"pvzId"`
+	Status   ReceptionStatus `json:"status"`
 }
 
 // ReceptionStatus defines model for Reception.Status.
@@ -105,7 +116,7 @@ type Token = string
 // User defines model for User.
 type User struct {
 	Email openapi_types.Email `json:"email"`
-	Id    *openapi_types.UUID `json:"id,omitempty"`
+	Id    *uuid.UUID          `json:"id,omitempty"`
 	Role  UserRole            `json:"role"`
 }
 
@@ -128,7 +139,7 @@ type PostLoginJSONBody struct {
 
 // PostProductsJSONBody defines parameters for PostProducts.
 type PostProductsJSONBody struct {
-	PvzId openapi_types.UUID       `json:"pvzId"`
+	PvzId uuid.UUID                `json:"pvzId"`
 	Type  PostProductsJSONBodyType `json:"type"`
 }
 
@@ -152,7 +163,7 @@ type GetPvzParams struct {
 
 // PostReceptionsJSONBody defines parameters for PostReceptions.
 type PostReceptionsJSONBody struct {
-	PvzId openapi_types.UUID `json:"pvzId"`
+	PvzId uuid.UUID `json:"pvzId"`
 }
 
 // PostRegisterJSONBody defines parameters for PostRegister.
@@ -202,10 +213,10 @@ type ServerInterface interface {
 	PostPvz(c *gin.Context)
 	// Закрытие последней открытой приемки товаров в рамках ПВЗ
 	// (POST /pvz/{pvzId}/close_last_reception)
-	PostPvzPvzIdCloseLastReception(c *gin.Context, pvzId openapi_types.UUID)
+	PostPvzPvzIdCloseLastReception(c *gin.Context, pvzId uuid.UUID)
 	// Удаление последнего добавленного товара из текущей приемки (LIFO, только для сотрудников ПВЗ)
 	// (POST /pvz/{pvzId}/delete_last_product)
-	PostPvzPvzIdDeleteLastProduct(c *gin.Context, pvzId openapi_types.UUID)
+	PostPvzPvzIdDeleteLastProduct(c *gin.Context, pvzId uuid.UUID)
 	// Создание новой приемки товаров (только для сотрудников ПВЗ)
 	// (POST /receptions)
 	PostReceptions(c *gin.Context)
@@ -337,7 +348,7 @@ func (siw *ServerInterfaceWrapper) PostPvzPvzIdCloseLastReception(c *gin.Context
 	var err error
 
 	// ------------- Path parameter "pvzId" -------------
-	var pvzId openapi_types.UUID
+	var pvzId uuid.UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "pvzId", c.Param("pvzId"), &pvzId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -363,7 +374,7 @@ func (siw *ServerInterfaceWrapper) PostPvzPvzIdDeleteLastProduct(c *gin.Context)
 	var err error
 
 	// ------------- Path parameter "pvzId" -------------
-	var pvzId openapi_types.UUID
+	var pvzId uuid.UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "pvzId", c.Param("pvzId"), &pvzId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -447,4 +458,708 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/pvz/:pvzId/delete_last_product", wrapper.PostPvzPvzIdDeleteLastProduct)
 	router.POST(options.BaseURL+"/receptions", wrapper.PostReceptions)
 	router.POST(options.BaseURL+"/register", wrapper.PostRegister)
+}
+
+type PostDummyLoginRequestObject struct {
+	Body *PostDummyLoginJSONRequestBody
+}
+
+type PostDummyLoginResponseObject interface {
+	VisitPostDummyLoginResponse(w http.ResponseWriter) error
+}
+
+type PostDummyLogin200JSONResponse Token
+
+func (response PostDummyLogin200JSONResponse) VisitPostDummyLoginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostDummyLogin400JSONResponse Error
+
+func (response PostDummyLogin400JSONResponse) VisitPostDummyLoginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostLoginRequestObject struct {
+	Body *PostLoginJSONRequestBody
+}
+
+type PostLoginResponseObject interface {
+	VisitPostLoginResponse(w http.ResponseWriter) error
+}
+
+type PostLogin200JSONResponse Token
+
+func (response PostLogin200JSONResponse) VisitPostLoginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostLogin401JSONResponse Error
+
+func (response PostLogin401JSONResponse) VisitPostLoginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostProductsRequestObject struct {
+	Body *PostProductsJSONRequestBody
+}
+
+type PostProductsResponseObject interface {
+	VisitPostProductsResponse(w http.ResponseWriter) error
+}
+
+type PostProducts201JSONResponse Product
+
+func (response PostProducts201JSONResponse) VisitPostProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostProducts400JSONResponse Error
+
+func (response PostProducts400JSONResponse) VisitPostProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostProducts403JSONResponse Error
+
+func (response PostProducts403JSONResponse) VisitPostProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetPvzRequestObject struct {
+	Params GetPvzParams
+}
+
+type GetPvzResponseObject interface {
+	VisitGetPvzResponse(w http.ResponseWriter) error
+}
+
+type GetPvz200JSONResponse []struct {
+	Pvz        *PVZ `json:"pvz,omitempty"`
+	Receptions *[]struct {
+		Products  *[]Product `json:"products,omitempty"`
+		Reception *Reception `json:"reception,omitempty"`
+	} `json:"receptions,omitempty"`
+}
+
+func (response GetPvz200JSONResponse) VisitGetPvzResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostPvzRequestObject struct {
+	Body *PostPvzJSONRequestBody
+}
+
+type PostPvzResponseObject interface {
+	VisitPostPvzResponse(w http.ResponseWriter) error
+}
+
+type PostPvz201JSONResponse PVZ
+
+func (response PostPvz201JSONResponse) VisitPostPvzResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostPvz400JSONResponse Error
+
+func (response PostPvz400JSONResponse) VisitPostPvzResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostPvz403JSONResponse Error
+
+func (response PostPvz403JSONResponse) VisitPostPvzResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostPvzPvzIdCloseLastReceptionRequestObject struct {
+	PvzId uuid.UUID `json:"pvzId"`
+}
+
+type PostPvzPvzIdCloseLastReceptionResponseObject interface {
+	VisitPostPvzPvzIdCloseLastReceptionResponse(w http.ResponseWriter) error
+}
+
+type PostPvzPvzIdCloseLastReception200JSONResponse Reception
+
+func (response PostPvzPvzIdCloseLastReception200JSONResponse) VisitPostPvzPvzIdCloseLastReceptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostPvzPvzIdCloseLastReception400JSONResponse Error
+
+func (response PostPvzPvzIdCloseLastReception400JSONResponse) VisitPostPvzPvzIdCloseLastReceptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostPvzPvzIdCloseLastReception403JSONResponse Error
+
+func (response PostPvzPvzIdCloseLastReception403JSONResponse) VisitPostPvzPvzIdCloseLastReceptionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostPvzPvzIdDeleteLastProductRequestObject struct {
+	PvzId uuid.UUID `json:"pvzId"`
+}
+
+type PostPvzPvzIdDeleteLastProductResponseObject interface {
+	VisitPostPvzPvzIdDeleteLastProductResponse(w http.ResponseWriter) error
+}
+
+type PostPvzPvzIdDeleteLastProduct200Response struct {
+}
+
+func (response PostPvzPvzIdDeleteLastProduct200Response) VisitPostPvzPvzIdDeleteLastProductResponse(w http.ResponseWriter) error {
+	w.WriteHeader(200)
+	return nil
+}
+
+type PostPvzPvzIdDeleteLastProduct400JSONResponse Error
+
+func (response PostPvzPvzIdDeleteLastProduct400JSONResponse) VisitPostPvzPvzIdDeleteLastProductResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostPvzPvzIdDeleteLastProduct403JSONResponse Error
+
+func (response PostPvzPvzIdDeleteLastProduct403JSONResponse) VisitPostPvzPvzIdDeleteLastProductResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostReceptionsRequestObject struct {
+	Body *PostReceptionsJSONRequestBody
+}
+
+type PostReceptionsResponseObject interface {
+	VisitPostReceptionsResponse(w http.ResponseWriter) error
+}
+
+type PostReceptions201JSONResponse Reception
+
+func (response PostReceptions201JSONResponse) VisitPostReceptionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostReceptions400JSONResponse Error
+
+func (response PostReceptions400JSONResponse) VisitPostReceptionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostReceptions403JSONResponse Error
+
+func (response PostReceptions403JSONResponse) VisitPostReceptionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostRegisterRequestObject struct {
+	Body *PostRegisterJSONRequestBody
+}
+
+type PostRegisterResponseObject interface {
+	VisitPostRegisterResponse(w http.ResponseWriter) error
+}
+
+type PostRegister201JSONResponse User
+
+func (response PostRegister201JSONResponse) VisitPostRegisterResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostRegister400JSONResponse Error
+
+func (response PostRegister400JSONResponse) VisitPostRegisterResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+// StrictServerInterface represents all server handlers.
+type StrictServerInterface interface {
+	// Получение тестового токена
+	// (POST /dummyLogin)
+	PostDummyLogin(ctx context.Context, request PostDummyLoginRequestObject) (PostDummyLoginResponseObject, error)
+	// Авторизация пользователя
+	// (POST /login)
+	PostLogin(ctx context.Context, request PostLoginRequestObject) (PostLoginResponseObject, error)
+	// Добавление товара в текущую приемку (только для сотрудников ПВЗ)
+	// (POST /products)
+	PostProducts(ctx context.Context, request PostProductsRequestObject) (PostProductsResponseObject, error)
+	// Получение списка ПВЗ с фильтрацией по дате приемки и пагинацией
+	// (GET /pvz)
+	GetPvz(ctx context.Context, request GetPvzRequestObject) (GetPvzResponseObject, error)
+	// Создание ПВЗ (только для модераторов)
+	// (POST /pvz)
+	PostPvz(ctx context.Context, request PostPvzRequestObject) (PostPvzResponseObject, error)
+	// Закрытие последней открытой приемки товаров в рамках ПВЗ
+	// (POST /pvz/{pvzId}/close_last_reception)
+	PostPvzPvzIdCloseLastReception(ctx context.Context, request PostPvzPvzIdCloseLastReceptionRequestObject) (PostPvzPvzIdCloseLastReceptionResponseObject, error)
+	// Удаление последнего добавленного товара из текущей приемки (LIFO, только для сотрудников ПВЗ)
+	// (POST /pvz/{pvzId}/delete_last_product)
+	PostPvzPvzIdDeleteLastProduct(ctx context.Context, request PostPvzPvzIdDeleteLastProductRequestObject) (PostPvzPvzIdDeleteLastProductResponseObject, error)
+	// Создание новой приемки товаров (только для сотрудников ПВЗ)
+	// (POST /receptions)
+	PostReceptions(ctx context.Context, request PostReceptionsRequestObject) (PostReceptionsResponseObject, error)
+	// Регистрация пользователя
+	// (POST /register)
+	PostRegister(ctx context.Context, request PostRegisterRequestObject) (PostRegisterResponseObject, error)
+}
+
+type StrictHandlerFunc = strictgin.StrictGinHandlerFunc
+type StrictMiddlewareFunc = strictgin.StrictGinMiddlewareFunc
+
+func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareFunc) ServerInterface {
+	return &strictHandler{ssi: ssi, middlewares: middlewares}
+}
+
+type strictHandler struct {
+	ssi         StrictServerInterface
+	middlewares []StrictMiddlewareFunc
+}
+
+// PostDummyLogin operation middleware
+func (sh *strictHandler) PostDummyLogin(ctx *gin.Context) {
+	var request PostDummyLoginRequestObject
+
+	var body PostDummyLoginJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostDummyLogin(ctx, request.(PostDummyLoginRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostDummyLogin")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PostDummyLoginResponseObject); ok {
+		if err := validResponse.VisitPostDummyLoginResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostLogin operation middleware
+func (sh *strictHandler) PostLogin(ctx *gin.Context) {
+	var request PostLoginRequestObject
+
+	var body PostLoginJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostLogin(ctx, request.(PostLoginRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostLogin")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PostLoginResponseObject); ok {
+		if err := validResponse.VisitPostLoginResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostProducts operation middleware
+func (sh *strictHandler) PostProducts(ctx *gin.Context) {
+	var request PostProductsRequestObject
+
+	var body PostProductsJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostProducts(ctx, request.(PostProductsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostProducts")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PostProductsResponseObject); ok {
+		if err := validResponse.VisitPostProductsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetPvz operation middleware
+func (sh *strictHandler) GetPvz(ctx *gin.Context, params GetPvzParams) {
+	var request GetPvzRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPvz(ctx, request.(GetPvzRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPvz")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetPvzResponseObject); ok {
+		if err := validResponse.VisitGetPvzResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostPvz operation middleware
+func (sh *strictHandler) PostPvz(ctx *gin.Context) {
+	var request PostPvzRequestObject
+
+	var body PostPvzJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostPvz(ctx, request.(PostPvzRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostPvz")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PostPvzResponseObject); ok {
+		if err := validResponse.VisitPostPvzResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostPvzPvzIdCloseLastReception operation middleware
+func (sh *strictHandler) PostPvzPvzIdCloseLastReception(ctx *gin.Context, pvzId uuid.UUID) {
+	var request PostPvzPvzIdCloseLastReceptionRequestObject
+
+	request.PvzId = pvzId
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostPvzPvzIdCloseLastReception(ctx, request.(PostPvzPvzIdCloseLastReceptionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostPvzPvzIdCloseLastReception")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PostPvzPvzIdCloseLastReceptionResponseObject); ok {
+		if err := validResponse.VisitPostPvzPvzIdCloseLastReceptionResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostPvzPvzIdDeleteLastProduct operation middleware
+func (sh *strictHandler) PostPvzPvzIdDeleteLastProduct(ctx *gin.Context, pvzId uuid.UUID) {
+	var request PostPvzPvzIdDeleteLastProductRequestObject
+
+	request.PvzId = pvzId
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostPvzPvzIdDeleteLastProduct(ctx, request.(PostPvzPvzIdDeleteLastProductRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostPvzPvzIdDeleteLastProduct")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PostPvzPvzIdDeleteLastProductResponseObject); ok {
+		if err := validResponse.VisitPostPvzPvzIdDeleteLastProductResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostReceptions operation middleware
+func (sh *strictHandler) PostReceptions(ctx *gin.Context) {
+	var request PostReceptionsRequestObject
+
+	var body PostReceptionsJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostReceptions(ctx, request.(PostReceptionsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostReceptions")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PostReceptionsResponseObject); ok {
+		if err := validResponse.VisitPostReceptionsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PostRegister operation middleware
+func (sh *strictHandler) PostRegister(ctx *gin.Context) {
+	var request PostRegisterRequestObject
+
+	var body PostRegisterJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostRegister(ctx, request.(PostRegisterRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostRegister")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PostRegisterResponseObject); ok {
+		if err := validResponse.VisitPostRegisterResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// Base64 encoded, gzipped, json marshaled Swagger object
+var swaggerSpec = []string{
+
+	"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",
+	"X6pvvfiI6zJ3KfX6/wMAAP//gaa8Lv4lAAA=",
+}
+
+// GetSwagger returns the content of the embedded swagger specification file
+// or error if failed to decode
+func decodeSpec() ([]byte, error) {
+	zipped, err := base64.StdEncoding.DecodeString(strings.Join(swaggerSpec, ""))
+	if err != nil {
+		return nil, fmt.Errorf("error base64 decoding spec: %w", err)
+	}
+	zr, err := gzip.NewReader(bytes.NewReader(zipped))
+	if err != nil {
+		return nil, fmt.Errorf("error decompressing spec: %w", err)
+	}
+	var buf bytes.Buffer
+	_, err = buf.ReadFrom(zr)
+	if err != nil {
+		return nil, fmt.Errorf("error decompressing spec: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+var rawSpec = decodeSpecCached()
+
+// a naive cached of a decoded swagger spec
+func decodeSpecCached() func() ([]byte, error) {
+	data, err := decodeSpec()
+	return func() ([]byte, error) {
+		return data, err
+	}
+}
+
+// Constructs a synthetic filesystem for resolving external references when loading openapi specifications.
+func PathToRawSpec(pathToFile string) map[string]func() ([]byte, error) {
+	res := make(map[string]func() ([]byte, error))
+	if len(pathToFile) > 0 {
+		res[pathToFile] = rawSpec
+	}
+
+	return res
+}
+
+// GetSwagger returns the Swagger specification corresponding to the generated code
+// in this file. The external references of Swagger specification are resolved.
+// The logic of resolving external references is tightly connected to "import-mapping" feature.
+// Externally referenced files must be embedded in the corresponding golang packages.
+// Urls can be supported but this task was out of the scope.
+func GetSwagger() (swagger *openapi3.T, err error) {
+	resolvePath := PathToRawSpec("")
+
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	loader.ReadFromURIFunc = func(loader *openapi3.Loader, url *url.URL) ([]byte, error) {
+		pathToFile := url.String()
+		pathToFile = path.Clean(pathToFile)
+		getSpec, ok := resolvePath[pathToFile]
+		if !ok {
+			err1 := fmt.Errorf("path not found: %s", pathToFile)
+			return nil, err1
+		}
+		return getSpec()
+	}
+	var specData []byte
+	specData, err = rawSpec()
+	if err != nil {
+		return
+	}
+	swagger, err = loader.LoadFromData(specData)
+	if err != nil {
+		return
+	}
+	return
 }

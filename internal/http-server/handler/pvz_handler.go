@@ -1,3 +1,5 @@
+//go:generate mockgen -source=./pvz_handler.go -destination=./mocks/pvz_handler.go -package=mocks
+
 package handler
 
 import (
@@ -15,21 +17,30 @@ type PvzService interface {
 	CreatePvz(context.Context, *request.CreatePvz) (*entity.Pvz, error)
 }
 
-func CreatePvz(ctx *gin.Context, service PvzService) error {
+// PostPvz creates a new pvz with moderator auth.
+func (h Handler) PostPvz(ctx *gin.Context) {
 	log.SetPrefix("http-server.handler.CreatePvz")
+
+	h.authSrv.AuthMiddleware(entity.ROLE_MODERATOR)(ctx)
+	if ctx.IsAborted() {
+		return
+	}
+
 	var req request.CreatePvz
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		return apperror.NewBadReq("invalid req: " + err.Error())
+		wrapCtxWithError(ctx, apperror.NewBadReq("invalid req: "+err.Error()))
+		return
 	}
 
 	if _, ok := entity.Cities[entity.City(req.City)]; !ok {
-		return apperror.NewBadReq("invalid city: " + req.City)
+		wrapCtxWithError(ctx, apperror.NewBadReq("invalid city: "+req.City))
+		return
 	}
 
-	pvz, err := service.CreatePvz(ctx, &req)
+	pvz, err := h.pvzSrv.CreatePvz(ctx, &req)
 	if err != nil {
-		return err
+		wrapCtxWithError(ctx, err)
+		return
 	}
 	ctx.JSON(http.StatusCreated, pvz.ToResponse())
-	return nil
 }
