@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
@@ -20,6 +21,7 @@ type UserService interface {
 	Login(context.Context, *request.Login) (*response.Login, error)
 }
 
+// PostDummyLogin returns token for
 func (h Handler) PostDummyLogin(ctx *gin.Context) {
 	log.SetPrefix("http-server.handler.DummyLogin")
 
@@ -42,6 +44,7 @@ func (h Handler) PostDummyLogin(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, resp)
 }
 
+// PostRegister creates a new user.
 func (h Handler) PostRegister(ctx *gin.Context) {
 	log.SetPrefix("http-server.handler.Register")
 
@@ -65,6 +68,7 @@ func (h Handler) PostRegister(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, usr.ToResponse())
 }
 
+// PostLogin checks creadentials and return token
 func (h Handler) PostLogin(ctx *gin.Context) {
 	log.SetPrefix("http-server.handler.Login")
 

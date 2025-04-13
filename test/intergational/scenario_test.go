@@ -58,7 +58,7 @@ func (s *IntegrationSuite) dummyLoginHelper(role string) string {
 
 // TestFullPVZPipeline realizes scenario:
 //  1. moderator gets token creates new PVZ
-//  2. employee gets token and craetes new reception
+//  2. employee gets token and creates new reception
 //  3. employee adds 50 products to reception
 //  4. employee closes receptions
 func (s *IntegrationSuite) TestPVZPipeline() {
@@ -104,7 +104,7 @@ func (s *IntegrationSuite) TestPVZPipeline() {
 		SetHeader("Authorization", fmt.Sprintf("Bearer %s", s.employeeToken)).
 		SetBody(receptionBody).
 		Post("/receptions")
-	s.T().Logf("Craete Reception response: %v", string(r.Body()))
+	s.T().Logf("Create Reception response: %v", string(r.Body()))
 	require.NoError(s.T(), err)
 	require.Equal(s.T(), r.StatusCode(), http.StatusCreated)
 

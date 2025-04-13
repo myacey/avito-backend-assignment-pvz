@@ -9,12 +9,13 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"github.com/stretchr/testify/require"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository/mocks"
 	db "github.com/myacey/avito-backend-assignment-pvz/internal/repository/sqlc"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -69,7 +70,7 @@ func TestCreateUser(t *testing.T) {
 			expErr: repository.ErrUserAlreadyExists,
 		},
 		{
-			name: "craete user unk err",
+			name: "create user unk err",
 			req: &request.Register{
 				Email:    mockuser.Email,
 				Password: mockuser.Password,

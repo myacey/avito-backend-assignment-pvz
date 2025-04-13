@@ -6,8 +6,17 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
+	jwt_token "github.com/myacey/avito-backend-assignment-pvz/internal/pkg/jwt-token"
+)
+
+const (
+	HeaderAuthorization = "Authorization"
+
+	CtxKeyUserType = "User-Type"
 )
 
 type TokenChecker interface {
@@ -25,7 +34,7 @@ func New(tokenSrv TokenChecker) *AuthService {
 }
 
 func getToken(ctx *gin.Context) (string, error) {
-	bearerToken := ctx.GetHeader("Authorization")
+	bearerToken := ctx.GetHeader(HeaderAuthorization)
 	splitToken := strings.Split(bearerToken, " ")
 	if len(splitToken) != 2 {
 		return "", errors.New("invalid token")
@@ -43,7 +52,7 @@ func (s *AuthService) AuthMiddleware(neededRole ...entity.Role) gin.HandlerFunc 
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
 				Code:      http.StatusUnauthorized,
 				Message:   err.Error(),
-				RequestId: ctx.GetHeader("X-Request-Id"),
+				RequestId: ctx.GetHeader(handler.HeaderRequestID),
 			})
 			return
 		}
@@ -53,17 +62,17 @@ func (s *AuthService) AuthMiddleware(neededRole ...entity.Role) gin.HandlerFunc 
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
 				Code:      http.StatusUnauthorized,
 				Message:   err.Error(),
-				RequestId: ctx.GetHeader("X-Request-Id"),
+				RequestId: ctx.GetHeader(handler.HeaderRequestID),
 			})
 			return
 		}
 
-		r, ok := claims["role"]
+		r, ok := claims[jwt_token.JwtClaimRole]
 		if !ok {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
 				Code:      http.StatusUnauthorized,
 				Message:   "invalid role",
-				RequestId: ctx.GetHeader("X-Request-Id"),
+				RequestId: ctx.GetHeader(handler.HeaderRequestID),
 			})
 		}
 
@@ -72,7 +81,7 @@ func (s *AuthService) AuthMiddleware(neededRole ...entity.Role) gin.HandlerFunc 
 				continue
 			}
 
-			ctx.Set("User-Type", claims["role"])
+			ctx.Set(CtxKeyUserType, claims[jwt_token.JwtClaimRole])
 			ctx.Next()
 			return
 		}
@@ -80,7 +89,7 @@ func (s *AuthService) AuthMiddleware(neededRole ...entity.Role) gin.HandlerFunc 
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, response.Error{
 			Code:      http.StatusUnauthorized,
 			Message:   "invalid role",
-			RequestId: ctx.GetHeader("X-Request-Id"),
+			RequestId: ctx.GetHeader(handler.HeaderRequestID),
 		})
 	}
 }

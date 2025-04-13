@@ -12,13 +12,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler/mocks"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/pkg/openapi"
-	"github.com/stretchr/testify/require"
 )
 
 var (

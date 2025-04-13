@@ -8,6 +8,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
@@ -16,8 +17,8 @@ import (
 )
 
 type TokenService interface {
-	CraeteDummyToken(role string) (string, error)
-	CraeteUserToken(id uuid.UUID, role string) (string, error)
+	CreateDummyToken(role string) (string, error)
+	CreateUserToken(id uuid.UUID, role string) (string, error)
 	VerifyToken(tokenStr string) (map[string]interface{}, error)
 }
 
@@ -43,7 +44,7 @@ func NewUserService(repo UserRepo, conn *sql.DB, tokenSrv TokenService) *UserSer
 }
 
 func (s *UserServiceImpl) DummyLogin(ctx context.Context, req *request.DummyLogin) (*response.Login, error) {
-	tokenStr, err := s.tokenSrv.CraeteDummyToken(req.Role)
+	tokenStr, err := s.tokenSrv.CreateDummyToken(req.Role)
 	if err != nil {
 		return nil, apperror.NewUnauthorized(err.Error())
 	}
@@ -77,7 +78,7 @@ func (s *UserServiceImpl) Login(ctx context.Context, req *request.Login) (*respo
 		return nil, apperror.NewUnauthorized("user not found")
 	}
 
-	tokenStr, err := s.tokenSrv.CraeteUserToken(res.ID, string(res.Role))
+	tokenStr, err := s.tokenSrv.CreateUserToken(res.ID, string(res.Role))
 	if err != nil {
 		return nil, apperror.NewInternal("failed to create token", err)
 	}

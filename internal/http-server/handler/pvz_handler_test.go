@@ -13,12 +13,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler/mocks"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -81,7 +82,7 @@ func TestPostPvz(t *testing.T) {
 			expCode: http.StatusBadRequest,
 		},
 		{
-			name: "craete pvz err",
+			name: "create pvz err",
 			req: &request.CreatePvz{
 				ID:               pvz.ID,
 				RegistrationDate: pvz.RegistrationDate,

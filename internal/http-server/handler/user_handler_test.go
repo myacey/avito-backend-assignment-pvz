@@ -11,12 +11,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler/mocks"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
-	"github.com/stretchr/testify/require"
 )
 
 var mockuser = &entity.User{ID: uuid.New(), Email: "mock@example.com", Password: "mockpassword", Role: entity.ROLE_EMPLOYEE}
@@ -49,7 +50,6 @@ func TestPostDummyLogin(t *testing.T) {
 			name: "bad req",
 			req:  "nivalid",
 			mockBehavior: func(req interface{}) {
-				// service.EXPECT().DummyLogin(gomock.Any(), req).Return(&response.Login{Token: "valid"}, nil)
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -59,7 +59,6 @@ func TestPostDummyLogin(t *testing.T) {
 				Role: "invalid",
 			},
 			mockBehavior: func(req interface{}) {
-				// service.EXPECT().DummyLogin(gomock.Any(), req).Return(&response.Login{Token: "valid"}, nil)
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -135,7 +134,6 @@ func TestPostRegister(t *testing.T) {
 			name: "invalid req",
 			req:  "invalid",
 			mockBehavior: func(req interface{}) {
-				// service.EXPECT().Register(gomock.Any(), req).Return(mockuser, nil)
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -147,7 +145,6 @@ func TestPostRegister(t *testing.T) {
 				Role:     "invalid",
 			},
 			mockBehavior: func(req interface{}) {
-				// service.EXPECT().Register(gomock.Any(), req).Return(mockuser, nil)
 			},
 			expCode: http.StatusBadRequest,
 		},
@@ -224,7 +221,6 @@ func TestPostLogin(t *testing.T) {
 			name: "bad req",
 			req:  "invalid",
 			mockBehavior: func(req interface{}) {
-				// service.EXPECT().Login(gomock.Any(), req).Return(&response.Login{Token: "valid"}, nil)
 			},
 			expCode: http.StatusBadRequest,
 		},

@@ -9,12 +9,13 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"github.com/stretchr/testify/require"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository/mocks"
 	db "github.com/myacey/avito-backend-assignment-pvz/internal/repository/sqlc"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -487,16 +488,14 @@ func TestSearchReceptions(t *testing.T) {
 			require.Len(t, res, len(tc.expRes))
 
 			for i := range tc.expRes {
-				// Проверка всех полей, кроме времени
 				require.Equal(t, tc.expRes[i].ID, res[i].ID)
 				require.Equal(t, tc.expRes[i].PvzID, res[i].PvzID)
 				require.Equal(t, tc.expRes[i].Status, res[i].Status)
 
-				// Проверка времени с допуском
 				require.WithinDuration(t,
 					tc.expRes[i].DateTime,
 					res[i].DateTime,
-					time.Second, // Допустимая погрешность
+					time.Second,
 					"DateTime mismatch for element %d", i,
 				)
 			}

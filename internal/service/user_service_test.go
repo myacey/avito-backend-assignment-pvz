@@ -7,6 +7,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
@@ -14,7 +16,6 @@ import (
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/service"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/service/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -41,7 +42,7 @@ func TestDummyLogin(t *testing.T) {
 				Role: string(entity.ROLE_EMPLOYEE),
 			},
 			mockBehavior: func(req *request.DummyLogin) {
-				tokenSrv.EXPECT().CraeteDummyToken(req.Role).Return(tokenValid, nil)
+				tokenSrv.EXPECT().CreateDummyToken(req.Role).Return(tokenValid, nil)
 			},
 			expResp: &response.Login{tokenValid},
 			expErr:  nil,
@@ -52,7 +53,7 @@ func TestDummyLogin(t *testing.T) {
 				Role: string(entity.ROLE_EMPLOYEE),
 			},
 			mockBehavior: func(req *request.DummyLogin) {
-				tokenSrv.EXPECT().CraeteDummyToken(req.Role).Return("", errMock)
+				tokenSrv.EXPECT().CreateDummyToken(req.Role).Return("", errMock)
 			},
 			expResp: nil,
 			expErr:  apperror.NewUnauthorized(errMock.Error()),
@@ -160,7 +161,7 @@ func TestLogin(t *testing.T) {
 			},
 			mockBehavior: func(req *request.Login) {
 				userRepo.EXPECT().GetUser(gomock.Any(), req).Return(mockUser, nil)
-				tokenSrv.EXPECT().CraeteUserToken(mockUser.ID, string(mockUser.Role)).Return(tokenValid, nil)
+				tokenSrv.EXPECT().CreateUserToken(mockUser.ID, string(mockUser.Role)).Return(tokenValid, nil)
 			},
 			expResp: &response.Login{
 				Token: tokenValid,
@@ -199,7 +200,7 @@ func TestLogin(t *testing.T) {
 			},
 			mockBehavior: func(req *request.Login) {
 				userRepo.EXPECT().GetUser(gomock.Any(), req).Return(mockUser, nil)
-				tokenSrv.EXPECT().CraeteUserToken(mockUser.ID, string(mockUser.Role)).Return("", errMock)
+				tokenSrv.EXPECT().CreateUserToken(mockUser.ID, string(mockUser.Role)).Return("", errMock)
 			},
 			expResp: nil,
 			expErr:  apperror.NewInternal("failed to create token", errMock),

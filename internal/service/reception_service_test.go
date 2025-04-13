@@ -9,13 +9,14 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/service"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/service/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -354,7 +355,7 @@ func TestCreateReception(t *testing.T) {
 			mockBehavior: func(req *request.CreateReception) {
 				txMock.ExpectBegin().WillReturnError(errMock)
 			},
-			expErr: apperror.NewInternal("failed to craete reception", errMock),
+			expErr: apperror.NewInternal("failed to create reception", errMock),
 		},
 		{
 			name: "get last reception unk err",

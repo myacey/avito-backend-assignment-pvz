@@ -14,7 +14,9 @@ unit:
 	go test -v ./...
 
 test:
-	go test -v -tags=integrations ./...
+	go test -v -tags=integrations -count=1 ./...
+
+.PHONY: test
 
 coverage:
 	@go test -coverprofile=coverage.out -tags=integrations ./... && \

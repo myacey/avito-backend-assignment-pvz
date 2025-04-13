@@ -35,6 +35,14 @@ services:
         postgres:
           condition: service_healthy
 
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - "./configs/prometheus.yml:/etc/prometheus/prometheus.yml"
+    networks:
+      - backend-net
+    ports:
+      - 9090:9090
   
 networks:
   backend-net:

@@ -7,9 +7,15 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/apperror"
+)
+
+const (
+	HeaderRequestID  = "X-Request-Id"
+	CtxKeyRetryAfter = "Retry-After"
 )
 
 // RoleCheckerMiddleware is middleware interface
@@ -40,7 +46,7 @@ func wrapCtxWithError(ctx *gin.Context, err error) {
 		ctx.JSON(httpError.Code, response.Error{
 			Code:      httpError.Code,
 			Message:   httpError.Message,
-			RequestId: ctx.GetHeader("X-Request-Id"),
+			RequestId: ctx.GetHeader(HeaderRequestID),
 		})
 
 		if httpError.Code == http.StatusInternalServerError {
@@ -50,8 +56,8 @@ func wrapCtxWithError(ctx *gin.Context, err error) {
 		ctx.JSON(http.StatusInternalServerError, response.Error{
 			Code:      http.StatusInternalServerError,
 			Message:   err.Error(),
-			RequestId: ctx.GetHeader("X-Request-Id"),
+			RequestId: ctx.GetHeader(HeaderRequestID),
 		})
 	}
-	ctx.Set("Retry-After", 10)
+	ctx.Set(CtxKeyRetryAfter, 10)
 }
