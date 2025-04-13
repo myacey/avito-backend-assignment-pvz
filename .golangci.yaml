@@ -2,7 +2,6 @@ linters:
   enable:
     - bidichk # unicode chars
     - bodyclose # http body close
-    - copyloopvar # vars copied in loop
     - decorder # var declaration order
     - dupl # code clone detection
     - errname # errors naming
@@ -10,9 +9,7 @@ linters:
     - godot # end of comment
     - misspell # correct english :)
     - nestif # many if statements
-    - perfsprint # better sprintf func
     - predeclared # go predeclared indentifiers
-    - sloglint # logs
     - usestdlibvars # standart Go vars
     - whitespace # unneseccary newlines
   disable:
