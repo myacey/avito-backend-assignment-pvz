@@ -43,7 +43,7 @@ func NewUserService(repo UserRepo, conn *sql.DB, tokenSrv TokenService) *UserSer
 	}
 }
 
-func (s *UserServiceImpl) DummyLogin(ctx context.Context, req *request.DummyLogin) (*response.Login, error) {
+func (s *UserServiceImpl) DummyLogin(_ context.Context, req *request.DummyLogin) (*response.Login, error) {
 	tokenStr, err := s.tokenSrv.CreateDummyToken(req.Role)
 	if err != nil {
 		return nil, apperror.NewUnauthorized(err.Error())

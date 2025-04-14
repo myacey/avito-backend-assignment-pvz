@@ -1,4 +1,4 @@
-package jwt_token
+package jwttoken
 
 import (
 	"errors"
@@ -19,15 +19,15 @@ type TokenServiceConfig struct {
 	SecretKey string `mapstructure:"jwt_secret_key"`
 }
 
-type JWTTokenService struct {
+type Service struct {
 	secretKey []byte
 }
 
-func New(cfg TokenServiceConfig) *JWTTokenService {
-	return &JWTTokenService{[]byte(cfg.SecretKey)}
+func New(cfg TokenServiceConfig) *Service {
+	return &Service{[]byte(cfg.SecretKey)}
 }
 
-func (s *JWTTokenService) CreateDummyToken(role string) (string, error) {
+func (s *Service) CreateDummyToken(role string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		JwtClaimRole: role,
 		JwtClaimExp:  time.Now().Add(time.Hour * 24).Unix(),
@@ -40,7 +40,7 @@ func (s *JWTTokenService) CreateDummyToken(role string) (string, error) {
 	return tokenStr, nil
 }
 
-func (s *JWTTokenService) CreateUserToken(id uuid.UUID, role string) (string, error) {
+func (s *Service) CreateUserToken(id uuid.UUID, role string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		JwtClaimID:   id.String(),
 		JwtClaimRole: role,
@@ -54,7 +54,7 @@ func (s *JWTTokenService) CreateUserToken(id uuid.UUID, role string) (string, er
 	return tokenStr, nil
 }
 
-func (s *JWTTokenService) VerifyToken(tokenStr string) (map[string]interface{}, error) {
+func (s *Service) VerifyToken(tokenStr string) (map[string]interface{}, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

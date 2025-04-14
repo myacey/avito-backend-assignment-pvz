@@ -15,15 +15,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
-	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler/mocks"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/httpserver/handler"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/httpserver/handler/mocks"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 )
 
 var (
-	pvz     = &entity.Pvz{ID: uuid.New(), RegistrationDate: time.Date(2025, 12, 12, 12, 12, 12, 0, time.UTC), City: entity.CITY_MOSCOW}
+	pvz     = &entity.Pvz{ID: uuid.New(), RegistrationDate: time.Date(2025, 12, 12, 12, 12, 12, 0, time.UTC), City: entity.CityMoscow}
 	errMock = errors.New("mock error")
 )
 
@@ -49,7 +49,7 @@ func TestPostPvz(t *testing.T) {
 				City:             string(pvz.City),
 			},
 			mockBehavior: func(req interface{}) {
-				authSrv.EXPECT().AuthMiddleware(entity.ROLE_MODERATOR).Return(func(ctx *gin.Context) {})
+				authSrv.EXPECT().AuthMiddleware(entity.RoleModerator).Return(func(ctx *gin.Context) {})
 				service.EXPECT().CreatePvz(gomock.Any(), req).Return(pvz, nil)
 			},
 			expBody: &response.Pvz{
@@ -63,7 +63,7 @@ func TestPostPvz(t *testing.T) {
 			name: "invalid req",
 			req:  "invalid",
 			mockBehavior: func(req interface{}) {
-				authSrv.EXPECT().AuthMiddleware(entity.ROLE_MODERATOR).Return(func(ctx *gin.Context) {})
+				authSrv.EXPECT().AuthMiddleware(entity.RoleModerator).Return(func(ctx *gin.Context) {})
 				// service.EXPECT().CreatePvz(gomock.Any(), req).Return(pvz, nil)
 			},
 			expCode: http.StatusBadRequest,
@@ -76,7 +76,7 @@ func TestPostPvz(t *testing.T) {
 				City:             "invalid",
 			},
 			mockBehavior: func(req interface{}) {
-				authSrv.EXPECT().AuthMiddleware(entity.ROLE_MODERATOR).Return(func(ctx *gin.Context) {})
+				authSrv.EXPECT().AuthMiddleware(entity.RoleModerator).Return(func(ctx *gin.Context) {})
 				// service.EXPECT().CreatePvz(gomock.Any(), req).Return(pvz, nil)
 			},
 			expCode: http.StatusBadRequest,
@@ -89,7 +89,7 @@ func TestPostPvz(t *testing.T) {
 				City:             string(pvz.City),
 			},
 			mockBehavior: func(req interface{}) {
-				authSrv.EXPECT().AuthMiddleware(entity.ROLE_MODERATOR).Return(func(ctx *gin.Context) {})
+				authSrv.EXPECT().AuthMiddleware(entity.RoleModerator).Return(func(ctx *gin.Context) {})
 				service.EXPECT().CreatePvz(gomock.Any(), req).Return(nil, errMock)
 			},
 			expCode: http.StatusInternalServerError,

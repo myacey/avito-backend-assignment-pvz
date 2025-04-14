@@ -26,11 +26,11 @@ var (
 
 	pvzs []*entity.Pvz = []*entity.Pvz{pvz1, pvz2, pvz3}
 
-	reception1 *entity.Reception = &entity.Reception{ID: uuid.New(), DateTime: time.Now().AddDate(0, 0, -3), PvzID: pvz1.ID, Status: entity.STATUS_FINISHED}
-	reception2 *entity.Reception = &entity.Reception{ID: uuid.New(), DateTime: time.Now().AddDate(0, 0, -1), PvzID: pvz2.ID, Status: entity.STATUS_FINISHED}
-	reception3 *entity.Reception = &entity.Reception{ID: uuid.New(), DateTime: time.Now().AddDate(0, 0, 0), PvzID: pvz3.ID, Status: entity.STATUS_IN_PROGRESS}
+	reception1 *entity.Reception = &entity.Reception{ID: uuid.New(), DateTime: time.Now().AddDate(0, 0, -3), PvzID: pvz1.ID, Status: entity.StatusFinished}
+	reception2 *entity.Reception = &entity.Reception{ID: uuid.New(), DateTime: time.Now().AddDate(0, 0, -1), PvzID: pvz2.ID, Status: entity.StatusFinished}
+	reception3 *entity.Reception = &entity.Reception{ID: uuid.New(), DateTime: time.Now().AddDate(0, 0, 0), PvzID: pvz3.ID, Status: entity.StatusInProgress}
 
-	product *entity.Product = &entity.Product{ID: uuid.New(), DateTime: time.Now(), Type: entity.PRODUCT_TYPE_CLOTHES, ReceptionID: reception3.ID}
+	product *entity.Product = &entity.Product{ID: uuid.New(), DateTime: time.Now(), Type: entity.ProductTypeClothes, ReceptionID: reception3.ID}
 )
 
 func TestSearchReception(t *testing.T) {

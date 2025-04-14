@@ -18,6 +18,9 @@ test:
 
 .PHONY: test
 
+lint:
+	golangci-lint run
+
 coverage:
 	@go test -coverprofile=coverage.out -tags=integrations ./... && \
 	grep -v -E '/(mocks|sqlc|openapi|pkg)/' coverage.out > filtered.out && \
@@ -37,6 +40,6 @@ generate-proto:
 		--go-grpc_opt=paths=source_relative \
 		$(PROTO_DIR)/pvz.proto
 
-all: sqlc apigen gogen
+all: sqlc apigen gogen lint
 	docker compose up -d
 	go run ./cmd/main.go

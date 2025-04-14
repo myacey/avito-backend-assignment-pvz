@@ -14,9 +14,9 @@ import (
 type City string
 
 const (
-	CITY_MOSCOW           City = "Москва"
-	CITY_SAINT_PETERSBURG City = "Санкт-Петербург"
-	CITY_KAZAN            City = "Казань"
+	CityMoscow          City = "Москва"
+	CitySaintPetersburg City = "Санкт-Петербург"
+	CityKazan           City = "Казань"
 )
 
 func (c *City) Scan(src interface{}) error {
@@ -26,7 +26,7 @@ func (c *City) Scan(src interface{}) error {
 	case string:
 		*c = City(s)
 	default:
-		return fmt.Errorf("unsupported scan type for City: %T", src)
+		return fmt.Errorf("unsupported scan type for City: %v", src)
 	}
 	return nil
 }
@@ -35,10 +35,10 @@ func (c City) Value() (driver.Value, error) {
 	return string(c), nil
 }
 
-var Cities map[City]bool = map[City]bool{
-	CITY_MOSCOW:           true,
-	CITY_SAINT_PETERSBURG: true,
-	CITY_KAZAN:            true,
+var Cities = map[City]bool{
+	CityMoscow:          true,
+	CitySaintPetersburg: true,
+	CityKazan:           true,
 }
 
 type Pvz struct {

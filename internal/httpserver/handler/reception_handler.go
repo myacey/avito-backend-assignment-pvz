@@ -29,7 +29,7 @@ type ReceptionService interface {
 func (h Handler) GetPvz(ctx *gin.Context, params openapi.GetPvzParams) {
 	log.SetPrefix("http-server.handler.SearchPvz")
 
-	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE, entity.ROLE_MODERATOR)(ctx)
+	h.authSrv.AuthMiddleware(entity.RoleEmployee, entity.RoleModerator)(ctx)
 	if ctx.IsAborted() {
 		return
 	}
@@ -65,11 +65,11 @@ func (h Handler) GetPvz(ctx *gin.Context, params openapi.GetPvzParams) {
 	ctx.JSON(http.StatusOK, resp)
 }
 
-// PostPvzPvzIdCloseLastReception ends reception
+// PostPvzPvzIdCloseLastReception ends reception.
 func (h Handler) PostPvzPvzIdCloseLastReception(ctx *gin.Context, pvzID uuid.UUID) {
 	log.SetPrefix("http-server.handler.CloseLastReception")
 
-	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE)(ctx)
+	h.authSrv.AuthMiddleware(entity.RoleEmployee)(ctx)
 	if ctx.IsAborted() {
 		return
 	}
@@ -83,11 +83,11 @@ func (h Handler) PostPvzPvzIdCloseLastReception(ctx *gin.Context, pvzID uuid.UUI
 	ctx.JSON(http.StatusOK, reception.ToResponse())
 }
 
-// PostPvzPvzIdDeleteLastProduct deletes last product in reception
+// PostPvzPvzIdDeleteLastProduct deletes last product in reception.
 func (h Handler) PostPvzPvzIdDeleteLastProduct(ctx *gin.Context, pvzID uuid.UUID) {
 	log.SetPrefix("http-server.handler.DeleteLastProduct")
 
-	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE)(ctx)
+	h.authSrv.AuthMiddleware(entity.RoleEmployee)(ctx)
 	if ctx.IsAborted() {
 		return
 	}
@@ -105,7 +105,7 @@ func (h Handler) PostPvzPvzIdDeleteLastProduct(ctx *gin.Context, pvzID uuid.UUID
 func (h Handler) PostReceptions(ctx *gin.Context) {
 	log.SetPrefix("http-server.handler.CreateReception")
 
-	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE)(ctx)
+	h.authSrv.AuthMiddleware(entity.RoleEmployee)(ctx)
 	if ctx.IsAborted() {
 		return
 	}
@@ -129,7 +129,7 @@ func (h Handler) PostReceptions(ctx *gin.Context) {
 func (h Handler) PostProducts(ctx *gin.Context) {
 	log.SetPrefix("http-server.handler.PostProducts")
 
-	h.authSrv.AuthMiddleware(entity.ROLE_EMPLOYEE)(ctx)
+	h.authSrv.AuthMiddleware(entity.RoleEmployee)(ctx)
 	if ctx.IsAborted() {
 		return
 	}

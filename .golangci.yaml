@@ -1,0 +1,21 @@
+linters:
+  enable:
+    - bidichk # unicode chars
+    - bodyclose # http body close
+    - decorder # var declaration order
+    - dupl # code clone detection
+    - errname # errors naming
+    - funlen # too long funcs
+    - godot # end of comment
+    - misspell # correct english :)
+    - nestif # many if statements
+    - predeclared # go predeclared indentifiers
+    - usestdlibvars # standart Go vars
+    - whitespace # unneseccary newlines
+  disable:
+    - errcheck
+  # disable linter for tests
+
+run:
+  timeout: 1m
+  tests: false

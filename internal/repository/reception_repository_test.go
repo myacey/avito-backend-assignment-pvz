@@ -19,15 +19,15 @@ import (
 )
 
 var (
-	pvz       = &entity.Pvz{ID: uuid.New(), RegistrationDate: time.Now(), City: entity.CITY_MOSCOW}
-	reception = &entity.Reception{ID: uuid.New(), DateTime: time.Now(), PvzID: pvz.ID, Status: entity.STATUS_IN_PROGRESS}
-	product   = &entity.Product{ID: uuid.New(), DateTime: time.Now(), Type: entity.PRODUCT_TYPE_CLOTHES, ReceptionID: reception.ID}
+	pvz       = &entity.Pvz{ID: uuid.New(), RegistrationDate: time.Now(), City: entity.CityMoscow}
+	reception = &entity.Reception{ID: uuid.New(), DateTime: time.Now(), PvzID: pvz.ID, Status: entity.StatusInProgress}
+	product   = &entity.Product{ID: uuid.New(), DateTime: time.Now(), Type: entity.ProductTypeClothes, ReceptionID: reception.ID}
 
-	pvz1        = &entity.Pvz{ID: uuid.New(), RegistrationDate: time.Now(), City: entity.CITY_MOSCOW}
-	pvz2        = &entity.Pvz{ID: uuid.New(), RegistrationDate: time.Now().AddDate(0, 0, -1), City: entity.CITY_KAZAN}
-	reception1  = &entity.Reception{ID: uuid.New(), DateTime: time.Now().AddDate(0, 0, -1), PvzID: pvz1.ID, Status: entity.STATUS_FINISHED}
-	reception11 = &entity.Reception{ID: uuid.New(), DateTime: time.Now(), PvzID: pvz1.ID, Status: entity.STATUS_IN_PROGRESS}
-	reception2  = &entity.Reception{ID: uuid.New(), DateTime: time.Now(), PvzID: pvz2.ID, Status: entity.STATUS_IN_PROGRESS}
+	pvz1        = &entity.Pvz{ID: uuid.New(), RegistrationDate: time.Now(), City: entity.CityMoscow}
+	pvz2        = &entity.Pvz{ID: uuid.New(), RegistrationDate: time.Now().AddDate(0, 0, -1), City: entity.CityKazan}
+	reception1  = &entity.Reception{ID: uuid.New(), DateTime: time.Now().AddDate(0, 0, -1), PvzID: pvz1.ID, Status: entity.StatusFinished}
+	reception11 = &entity.Reception{ID: uuid.New(), DateTime: time.Now(), PvzID: pvz1.ID, Status: entity.StatusInProgress}
+	reception2  = &entity.Reception{ID: uuid.New(), DateTime: time.Now(), PvzID: pvz2.ID, Status: entity.StatusInProgress}
 )
 
 func TestGetLastOpenReception(t *testing.T) {
@@ -110,7 +110,7 @@ func TestCreateReception(t *testing.T) {
 					ID:       reception.ID,
 					DateTime: time.Now(),
 					PvzID:    req.PvzID,
-					Status:   entity.STATUS_IN_PROGRESS,
+					Status:   entity.StatusInProgress,
 				}, nil)
 			},
 			expRes: reception,
@@ -175,7 +175,7 @@ func TestAddProductToReception(t *testing.T) {
 		{
 			name: "ok",
 			req: &request.AddProduct{
-				Type:  string(entity.PRODUCT_TYPE_CLOTHES),
+				Type:  string(entity.ProductTypeClothes),
 				PvzID: pvz.ID,
 			},
 			receptionID: reception.ID,
@@ -193,7 +193,7 @@ func TestAddProductToReception(t *testing.T) {
 		{
 			name: "err other reception in progress conflict",
 			req: &request.AddProduct{
-				Type:  string(entity.PRODUCT_TYPE_CLOTHES),
+				Type:  string(entity.ProductTypeClothes),
 				PvzID: pvz.ID,
 			},
 			receptionID: reception.ID,
@@ -206,7 +206,7 @@ func TestAddProductToReception(t *testing.T) {
 		{
 			name: "unk err",
 			req: &request.AddProduct{
-				Type:  string(entity.PRODUCT_TYPE_CLOTHES),
+				Type:  string(entity.ProductTypeClothes),
 				PvzID: pvz.ID,
 			},
 			receptionID: reception.ID,
@@ -257,14 +257,14 @@ func TestFinishReception(t *testing.T) {
 					ID:       reception.ID,
 					DateTime: reception.DateTime,
 					PvzID:    reception.PvzID,
-					Status:   entity.STATUS_FINISHED,
+					Status:   entity.StatusFinished,
 				}, nil)
 			},
 			expRes: &entity.Reception{
 				ID:       reception.ID,
 				DateTime: reception.DateTime,
 				PvzID:    reception.PvzID,
-				Status:   entity.STATUS_FINISHED,
+				Status:   entity.StatusFinished,
 			},
 			expErr: nil,
 		},

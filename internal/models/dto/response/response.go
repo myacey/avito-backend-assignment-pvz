@@ -8,7 +8,7 @@ import (
 
 type Error struct {
 	Message   string `json:"message"`
-	RequestId string `json:"request_id"`
+	RequestID string `json:"request_id"`
 	Code      int    `json:"code"`
 }
 

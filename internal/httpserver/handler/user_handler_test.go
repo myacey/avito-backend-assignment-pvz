@@ -13,14 +13,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler"
-	"github.com/myacey/avito-backend-assignment-pvz/internal/http-server/handler/mocks"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/httpserver/handler"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/httpserver/handler/mocks"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/response"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
 )
 
-var mockuser = &entity.User{ID: uuid.New(), Email: "mock@example.com", Password: "mockpassword", Role: entity.ROLE_EMPLOYEE}
+var mockuser = &entity.User{ID: uuid.New(), Email: "mock@example.com", Password: "mockpassword", Role: entity.RoleEmployee}
 
 func TestPostDummyLogin(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -38,7 +38,7 @@ func TestPostDummyLogin(t *testing.T) {
 		{
 			name: "ok",
 			req: &request.DummyLogin{
-				Role: string(entity.ROLE_EMPLOYEE),
+				Role: string(entity.RoleEmployee),
 			},
 			mockBehavior: func(req interface{}) {
 				service.EXPECT().DummyLogin(gomock.Any(), req).Return(&response.Login{Token: "valid"}, nil)
@@ -65,7 +65,7 @@ func TestPostDummyLogin(t *testing.T) {
 		{
 			name: "service err",
 			req: &request.DummyLogin{
-				Role: string(entity.ROLE_EMPLOYEE),
+				Role: string(entity.RoleEmployee),
 			},
 			mockBehavior: func(req interface{}) {
 				service.EXPECT().DummyLogin(gomock.Any(), req).Return(nil, errMock)
@@ -153,7 +153,7 @@ func TestPostRegister(t *testing.T) {
 			req: &request.Register{
 				Email:    mockuser.Email,
 				Password: mockuser.Password,
-				Role:     string(entity.ROLE_EMPLOYEE),
+				Role:     string(entity.RoleEmployee),
 			},
 			mockBehavior: func(req interface{}) {
 				service.EXPECT().Register(gomock.Any(), req).Return(nil, errMock)

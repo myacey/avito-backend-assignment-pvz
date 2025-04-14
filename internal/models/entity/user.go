@@ -12,14 +12,14 @@ import (
 type Role string
 
 const (
-	ROLE_EMPLOYEE  Role = "employee"
-	ROLE_MODERATOR Role = "moderator"
+	RoleEmployee  Role = "employee"
+	RoleModerator Role = "moderator"
 )
 
-// for fast-checking
-var Roles map[Role]bool = map[Role]bool{
-	ROLE_EMPLOYEE:  true,
-	ROLE_MODERATOR: true,
+// for fast-checking.
+var Roles = map[Role]bool{
+	RoleEmployee:  true,
+	RoleModerator: true,
 }
 
 func (r Role) Value() (driver.Value, error) {

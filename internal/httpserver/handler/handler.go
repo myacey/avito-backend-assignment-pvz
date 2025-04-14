@@ -46,7 +46,7 @@ func wrapCtxWithError(ctx *gin.Context, err error) {
 		ctx.JSON(httpError.Code, response.Error{
 			Code:      httpError.Code,
 			Message:   httpError.Message,
-			RequestId: ctx.GetHeader(HeaderRequestID),
+			RequestID: ctx.GetHeader(HeaderRequestID),
 		})
 
 		if httpError.Code == http.StatusInternalServerError {
@@ -56,7 +56,7 @@ func wrapCtxWithError(ctx *gin.Context, err error) {
 		ctx.JSON(http.StatusInternalServerError, response.Error{
 			Code:      http.StatusInternalServerError,
 			Message:   err.Error(),
-			RequestId: ctx.GetHeader(HeaderRequestID),
+			RequestID: ctx.GetHeader(HeaderRequestID),
 		})
 	}
 	ctx.Set(CtxKeyRetryAfter, 10)

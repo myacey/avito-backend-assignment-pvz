@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	mockuser                = &entity.User{ID: uuid.New(), Email: "mock@example.com", Password: "mock", Role: entity.ROLE_EMPLOYEE}
+	mockuser                = &entity.User{ID: uuid.New(), Email: "mock@example.com", Password: "mock", Role: entity.RoleEmployee}
 	mockuserWithoutPassword = &entity.User{ID: mockuser.ID, Email: mockuser.Email, Role: mockuser.Role}
 
 	errMock = errors.New("mock error")

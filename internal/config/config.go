@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/viper"
 
 	pvzv1 "github.com/myacey/avito-backend-assignment-pvz/internal/grpc/pvz/v1"
-	jwt_token "github.com/myacey/avito-backend-assignment-pvz/internal/pkg/jwt-token"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/jwttoken"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web"
 )
 
@@ -20,7 +20,7 @@ type AppConfig struct {
 	HTTPServerCfg web.ServerConfig `mapstructure:"httpserver"`
 	GRPCServerCfg pvzv1.Config     `mapstructure:"grpcserver"`
 
-	TokenService jwt_token.TokenServiceConfig `mapstructure:"auth"`
+	TokenService jwttoken.TokenServiceConfig `mapstructure:"auth"`
 }
 
 func LoadConfig() (config AppConfig, err error) {
