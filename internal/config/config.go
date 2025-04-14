@@ -1,6 +1,8 @@
 package config
 
 import (
+	"log"
+
 	"github.com/spf13/viper"
 
 	pvzv1 "github.com/myacey/avito-backend-assignment-pvz/internal/grpc/pvz/v1"
@@ -24,11 +26,14 @@ type AppConfig struct {
 func LoadConfig(cfgPath string) (config AppConfig, err error) {
 	viper.SetConfigFile(".env")
 	viper.ReadInConfig()
+	viper.AutomaticEnv()
 
 	viper.SetConfigFile(cfgPath)
 	viper.MergeInConfig()
 
 	viper.Unmarshal(&config)
+
+	log.Println("config:", config)
 
 	return
 }
