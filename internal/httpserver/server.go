@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	middleware "github.com/oapi-codegen/gin-middleware"
+	oapimiddleware "github.com/oapi-codegen/gin-middleware"
 
 	"github.com/myacey/avito-backend-assignment-pvz/internal/config"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/httpserver/handler"
@@ -14,6 +14,7 @@ import (
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/jwttoken"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/metrics"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/web/middleware"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 	db "github.com/myacey/avito-backend-assignment-pvz/internal/repository/sqlc"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/service"
@@ -67,6 +68,7 @@ func (app *App) initialize(cfg config.AppConfig, conn *sql.DB, queries *db.Queri
 		authSrv,
 	)
 
+	app.Router.Use(middleware.RequestIDMiddleware(handler.HeaderRequestID))
 	app.Router.Use(metrics.GetMetricsMiddleware())
 
 	swagger, err := openapi.GetSwagger()
@@ -75,5 +77,5 @@ func (app *App) initialize(cfg config.AppConfig, conn *sql.DB, queries *db.Queri
 	}
 
 	openapi.RegisterHandlers(app.Router, hndlr)
-	app.Router.Use(middleware.OapiRequestValidator(swagger))
+	app.Router.Use(oapimiddleware.OapiRequestValidator(swagger))
 }

@@ -42,4 +42,3 @@ generate-proto:
 
 all: sqlc apigen gogen lint
 	docker compose up -d
-	go run ./cmd/main.go
