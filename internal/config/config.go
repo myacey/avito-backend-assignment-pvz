@@ -23,15 +23,17 @@ type AppConfig struct {
 	TokenService jwttoken.TokenServiceConfig `mapstructure:"auth"`
 }
 
-func LoadConfig() (config AppConfig, err error) {
+func LoadConfig(cfgPath string) (config AppConfig, err error) {
 	viper.SetConfigFile(".env")
 	viper.ReadInConfig()
+	viper.AutomaticEnv()
 
-	viper.SetConfigFile("./configs/config.yaml")
+	viper.SetConfigFile(cfgPath)
 	viper.MergeInConfig()
 
 	viper.Unmarshal(&config)
 
 	log.Println("config:", config)
+
 	return
 }

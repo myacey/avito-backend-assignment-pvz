@@ -2,13 +2,14 @@ package pvzv1
 
 import (
 	context "context"
-	"math"
+	"errors"
+	"log"
+	"net"
 	"time"
 
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/dto/request"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/models/entity"
@@ -27,14 +28,19 @@ type PvzFinder interface {
 	SearchPvz(ctx context.Context, req *request.SearchPvz) ([]*entity.Pvz, error)
 }
 
-type PVZServer struct {
-	UnimplementedPVZServiceServer
-	srv PvzFinder
+type Server struct {
+	cfg    Config
+	srv    PvzFinder
+	server *grpc.Server
+	lis    net.Listener
 }
 
-func New(cfg Config) (*grpc.Server, error) {
-	var options []grpc.ServerOption
+func New(cfg Config, service PvzFinder) (*Server, error) {
+	if service == nil {
+		return nil, errors.New("pvz service can't be nil")
+	}
 
+	var options []grpc.ServerOption
 	options = append(options, grpc.KeepaliveParams(keepalive.ServerParameters{
 		Time:    cfg.KeepAliveTime,
 		Timeout: cfg.KeepAliveTimeout,
@@ -49,32 +55,35 @@ func New(cfg Config) (*grpc.Server, error) {
 	}
 
 	grpcServer := grpc.NewServer(options...)
-	return grpcServer, nil
+	handler := &PVZServer{srv: service}
+	RegisterPVZServiceServer(grpcServer, handler)
+
+	return &Server{
+		cfg:    cfg,
+		srv:    service,
+		server: grpcServer,
+	}, nil
 }
 
-func NewPVZServer(s PvzFinder) *PVZServer {
-	return &PVZServer{srv: s}
-}
-
-func (s *PVZServer) GetPVZList(ctx context.Context, _ *GetPVZListRequest) (*GetPVZListResponse, error) {
-	pvzs, err := s.srv.SearchPvz(ctx, &request.SearchPvz{
-		StartDate: time.Date(0, 0, 0, 0, 0, 0, 0, time.Local),
-		EndDate:   time.Now(),
-		Page:      1,
-		Limit:     math.MaxInt32,
-	})
+func (s *Server) Start() error {
+	lis, err := net.Listen("tcp", s.cfg.Address)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var res []*PVZ
-	for _, pvz := range pvzs {
-		res = append(res, &PVZ{
-			Id:               pvz.ID.String(),
-			City:             string(pvz.City),
-			RegistrationDate: timestamppb.New(pvz.RegistrationDate),
-		})
-	}
+	s.lis = lis
 
-	return &GetPVZListResponse{Pvzs: res}, nil
+	log.Printf("starting gRPC server on %s", s.cfg.Address)
+	go func() {
+		if err := s.server.Serve(lis); err != nil {
+			log.Fatalf("gRPC Serve error: %v", err)
+		}
+	}()
+
+	return nil
+}
+
+func (s *Server) Stop() {
+	log.Println("shutting down gRPC server...")
+	s.server.GracefulStop()
 }

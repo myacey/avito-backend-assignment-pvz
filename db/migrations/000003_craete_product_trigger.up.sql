@@ -9,10 +9,9 @@ BEGIN
     SELECT status INTO rec_status FROM receptions WHERE id = NEW.reception_id;
 
     IF rec_status IS DISTINCT FROM 'in_progress' THEN
-        RAISE EXCEPTION
-            USING ERRCODE = '20001', -- custom err
-                  MESSAGE = 'cannot add product to finished reception';
-    END IF;
+        RAISE EXCEPTION 'cannot add product to finished reception'
+            USING ERRCODE = '20001';
+        END IF;
 
     RETURN NEW;
 END;
