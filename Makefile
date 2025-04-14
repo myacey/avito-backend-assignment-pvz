@@ -21,13 +21,11 @@ test:
 lint:
 	golangci-lint run
 
-coverage:
-	@go test -coverprofile=coverage.out -tags=integrations ./... && \
-	grep -v -E '/(mocks|sqlc|openapi|pkg)/' coverage.out > filtered.out && \
-	COVERAGE=$$(go tool cover -func=filtered.out | grep total | awk '{print $$3}') && \
-	echo "--------------------------------" && \
-	echo "Coverage: $${COVERAGE}" && \
-	rm coverage.out filtered.out
+up:
+	docker compose up -d --build
+
+stop:
+	docker compose stop
 
 PROTO_DIR = api
 PROTO_OUT = internal/grpc/pvz/v1
@@ -40,5 +38,5 @@ generate-proto:
 		--go-grpc_opt=paths=source_relative \
 		$(PROTO_DIR)/pvz.proto
 
-all: sqlc apigen gogen lint
+all: sqlc apigen gogen lint generate-proto unit
 	docker compose up -d
