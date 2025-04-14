@@ -1,8 +1,6 @@
 package config
 
 import (
-	"log"
-
 	"github.com/spf13/viper"
 
 	pvzv1 "github.com/myacey/avito-backend-assignment-pvz/internal/grpc/pvz/v1"
@@ -23,15 +21,14 @@ type AppConfig struct {
 	TokenService jwttoken.TokenServiceConfig `mapstructure:"auth"`
 }
 
-func LoadConfig() (config AppConfig, err error) {
+func LoadConfig(cfgPath string) (config AppConfig, err error) {
 	viper.SetConfigFile(".env")
 	viper.ReadInConfig()
 
-	viper.SetConfigFile("./configs/config.yaml")
+	viper.SetConfigFile(cfgPath)
 	viper.MergeInConfig()
 
 	viper.Unmarshal(&config)
 
-	log.Println("config:", config)
 	return
 }

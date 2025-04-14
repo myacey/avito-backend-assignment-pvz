@@ -2,26 +2,34 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
 	_ "github.com/lib/pq"
+	"google.golang.org/grpc"
 
 	"github.com/myacey/avito-backend-assignment-pvz/internal/config"
 	pvzv1 "github.com/myacey/avito-backend-assignment-pvz/internal/grpc/pvz/v1"
-	http_server "github.com/myacey/avito-backend-assignment-pvz/internal/httpserver"
+	"github.com/myacey/avito-backend-assignment-pvz/internal/httpserver"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/pkg/metrics"
 	"github.com/myacey/avito-backend-assignment-pvz/internal/repository"
 )
 
+var (
+	cfgPath = flag.String("f", "configs/config.yaml", "path to the go's config")
+	useGrpc = flag.Bool("g", true, "use grpc server?")
+)
+
 func main() {
+	flag.Parse()
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	cfg, err := config.LoadConfig()
+	cfg, err := config.LoadConfig(*cfgPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,35 +39,31 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app := http_server.New(cfg, conn, queries)
+	app := httpserver.New(cfg, conn, queries)
 
-	// grpcServer := grpc.NewServer()
-	grpcServer, err := pvzv1.New(cfg.GRPCServerCfg)
-	if err != nil {
-		log.Fatalf("failed to create grpc server: %v", err)
-	}
-	pvzv1.RegisterPVZServiceServer(grpcServer, pvzv1.NewPVZServer(&app.Service.PvzService))
-
-	lis, err := net.Listen("tcp", cfg.GRPCServerCfg.Address)
-	if err != nil {
-		log.Fatal(err)
-	}
-	go func() {
-		log.Printf("start grpc server on %s", cfg.GRPCServerCfg.Address)
-		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatal(err)
+	var grpcServer *grpc.Server
+	if *useGrpc {
+		grpcServer, err := pvzv1.New(cfg.GRPCServerCfg, &app.Service.PvzService)
+		if err != nil {
+			log.Fatalf("failed to create grpc server: %v", err)
 		}
-	}()
+		if err := grpcServer.Start(); err != nil {
+			log.Fatalf("failed to start grpc server: %v", err)
+		}
+	}
 
 	go func() {
 		<-ctx.Done()
+
 		app.Stop(ctx)
-		grpcServer.GracefulStop()
+		if grpcServer != nil {
+			grpcServer.Stop()
+		}
 	}()
 
 	metrics.StartMetricsServer()
 
 	if err := app.Start(ctx); err != nil {
-		log.Fatal(err)
+		log.Printf("http server returned error: %v", err)
 	}
 }
